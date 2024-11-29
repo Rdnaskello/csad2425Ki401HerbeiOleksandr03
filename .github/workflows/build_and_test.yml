@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest  # Використання Windows замість Ubuntu
+    runs-on: windows-latest  # Використання Windows для підтримки MSYS2
 
     steps:
     - name: Checkout code
@@ -21,6 +21,9 @@ jobs:
       with:
         update: true
 
+    - name: Create Mock Serial Input
+      run: echo "Mock response from server" > mock_serial_in.txt
+
     - name: Build Project
       run: |
         mkdir -p build
@@ -28,4 +31,11 @@ jobs:
 
     - name: Test Application
       run: |
+        set CI=true  # Установлюємо змінну середовища для емуляції
         ./build/client
+
+    - name: Clean up Mock Files
+      if: always()  # Завжди виконуємо, навіть якщо тест провалився
+      run: |
+        del mock_serial_in.txt
+        del mock_serial_out.txt
