@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+      - feature/develop/task2
   pull_request:
     branches:
       - main
+      - feature/develop/task2
 
 jobs:
   build:
