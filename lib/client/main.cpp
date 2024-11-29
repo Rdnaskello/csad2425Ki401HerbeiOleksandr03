@@ -1,124 +1,532 @@
+#include <SFML/Graphics.hpp>
 #include <iostream>
-#include <fstream>
-#include <string>
-#include <windows.h> // Для роботи із серійним портом
-#include <cstdlib>   // Для getenv
+#include <windows.h> // Для роботи з серійним портом на Windows
+#include "D:/simpleini-master/simpleini-master/SimpleIni.h"
 
-HANDLE hSerial; // Дескриптор серійного порту
-std::ofstream mockSerialOut; // Файл для емуляції запису
-std::ifstream mockSerialIn;  // Файл для емуляції читання
+const int SIZE_BOARD = 3; // Розмір дошки 3x3
+const int TILE_SIZE = 100; // Розмір однієї клітини
+char board[SIZE_BOARD][SIZE_BOARD] = { {' ', ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '} }; // Ігрова дошка
 
-// Перевіряємо, чи запускається програма в CI-середовищі
-bool isCIEnvironment() {
-    const char* ci = std::getenv("CI");
-    return ci != nullptr;
-}
+HANDLE hSerial;
+DCB dcbSerialParams = { 0 };
+COMMTIMEOUTS timeouts = { 0 };
 
-// Функція для відкриття серійного порту або файлу
+
 bool openSerialPort(const char* portName) {
-    if (isCIEnvironment()) {
-        // У CI-середовищі використовуємо файл як "серійний порт"
-        mockSerialOut.open("mock_serial_out.txt");
-        mockSerialIn.open("mock_serial_in.txt");
-        if (!mockSerialOut.is_open() || !mockSerialIn.is_open()) {
-            std::cerr << "Error: Unable to open mock serial port files!" << std::endl;
-            return false;
-        }
-        std::cout << "Mock serial port initialized for CI environment." << std::endl;
-        return true;
-    }
-
-    // У звичайному середовищі працюємо з реальним серійним портом
     hSerial = CreateFileA(portName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hSerial == INVALID_HANDLE_VALUE) {
-        std::cerr << "Error: Unable to open serial port!" << std::endl;
         return false;
     }
 
-    DCB dcbSerialParams = { 0 };
     dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
     if (!GetCommState(hSerial, &dcbSerialParams)) {
-        std::cerr << "Error: Unable to get serial port state!" << std::endl;
-        CloseHandle(hSerial);
         return false;
     }
 
-    dcbSerialParams.BaudRate = CBR_9600;
+    dcbSerialParams.BaudRate = CBR_4800;
     dcbSerialParams.ByteSize = 8;
     dcbSerialParams.StopBits = ONESTOPBIT;
     dcbSerialParams.Parity = NOPARITY;
-
     if (!SetCommState(hSerial, &dcbSerialParams)) {
-        std::cerr << "Error: Unable to set serial port state!" << std::endl;
-        CloseHandle(hSerial);
+        return false;
+    }
+
+    timeouts.ReadIntervalTimeout = 50;
+    timeouts.ReadTotalTimeoutConstant = 50;
+    timeouts.ReadTotalTimeoutMultiplier = 10;
+    timeouts.WriteTotalTimeoutConstant = 50;
+    timeouts.WriteTotalTimeoutMultiplier = 10;
+    if (!SetCommTimeouts(hSerial, &timeouts)) {
         return false;
     }
 
     return true;
 }
 
-// Функція для запису в серійний порт або файл
-void writeSerialPort(const std::string& data) {
-    if (isCIEnvironment()) {
-        if (mockSerialOut.is_open()) {
-            mockSerialOut << data << std::endl;
-            std::cout << "Mock Sent: " << data << std::endl;
-        }
-    } else {
-        DWORD bytesWritten;
-        if (!WriteFile(hSerial, data.c_str(), data.size(), &bytesWritten, NULL)) {
-            std::cerr << "Error: Failed to write to serial port!" << std::endl;
-        } else {
-            std::cout << "Sent to Arduino: " << data << std::endl;
+void updateBoardFromSerial(const std::string& response) {
+    if (response.length() < SIZE_BOARD * SIZE_BOARD) {
+        return; // Вийти з функції, якщо недостатньо даних
+    }
+
+    int index = 0;
+    for (int i = 0; i < SIZE_BOARD; ++i) {
+        for (int j = 0; j < SIZE_BOARD; ++j) {
+            board[i][j] = response[index++];
         }
     }
 }
 
-// Функція для читання із серійного порту або файлу
+struct Stats {
+    // PvP
+    int pvpGames = 0;
+    int winsX = 0;
+    int lossesX = 0;
+    int drawsX = 0;
+    int winsO = 0;
+    int lossesO = 0;
+    int drawsO = 0;
+
+    // AI Player First
+    int Games = 0;
+    int Wins = 0;
+    int Draws = 0;
+    int Losses = 0;
+    int Winrate = 0;
+
+};
+
+Stats stats;
+
+void saveStatsToExistingINI(const std::string& filename) {
+    CSimpleIniA ini;
+    ini.SetUnicode();
+
+    // Завантажуємо існуючий INI-файл
+    if (ini.LoadFile(filename.c_str()) != SI_OK) {
+        std::cout << "Failed to load INI file." << std::endl;
+        return;
+    }
+
+    // Зберігаємо статистику PvP
+    ini.SetLongValue("Stats_PvP", "Games", stats.pvpGames);
+    ini.SetLongValue("Stats_PvP", "WinsX", stats.winsX);
+    ini.SetLongValue("Stats_PvP", "LossesX", stats.lossesX);
+    ini.SetLongValue("Stats_PvP", "DrawsX", stats.drawsX);
+    ini.SetLongValue("Stats_PvP", "WinsO", stats.winsO);
+    ini.SetLongValue("Stats_PvP", "LossesO", stats.lossesO);
+    ini.SetLongValue("Stats_PvP", "DrawsO", stats.drawsO);
+
+    // Зберігаємо статистику для AI-гри (гравець перший)
+    ini.SetLongValue("Stats ", "Games", stats.Games);
+    ini.SetLongValue("Stats ", "Wins", stats.Wins);
+    ini.SetLongValue("Stats ", "Draws", stats.Draws);
+    ini.SetLongValue("Stats ", "Losses", stats.Losses);
+    ini.SetLongValue("Stats ", "Winrate", stats.Winrate);
+
+
+    // Зберігаємо зміни в INI-файл
+    if (ini.SaveFile(filename.c_str()) != SI_OK) {
+        std::cout << "Failed to save INI file." << std::endl;
+    }
+    else {
+        std::cout << "Stats saved to existing INI file successfully." << std::endl;
+    }
+}
+
+void loadStatsFromExistingINI(const std::string& filename) {
+    CSimpleIniA ini;
+    ini.SetUnicode();
+
+    // Завантажуємо існуючий INI-файл
+    if (ini.LoadFile(filename.c_str()) != SI_OK) {
+        std::cout << "Failed to load INI file." << std::endl;
+        return;
+    }
+
+    // Завантажуємо статистику PvP
+    stats.pvpGames = ini.GetLongValue("Stats_PvP", "Games", 0);
+    stats.winsX = ini.GetLongValue("Stats_PvP", "WinsX", 0);
+    stats.lossesX = ini.GetLongValue("Stats_PvP", "LossesX", 0);
+    stats.drawsX = ini.GetLongValue("Stats_PvP", "DrawsX", 0);
+    stats.winsO = ini.GetLongValue("Stats_PvP", "WinsO", 0);
+    stats.lossesO = ini.GetLongValue("Stats_PvP", "LossesO", 0);
+    stats.drawsO = ini.GetLongValue("Stats_PvP", "DrawsO", 0);
+
+    // Завантажуємо статистику для AI-гри (гравець перший)
+    stats.Games = ini.GetLongValue("Stats ", "Games", 0);
+    stats.Wins = ini.GetLongValue("Stats ", "Wins", 0);
+    stats.Draws = ini.GetLongValue("Stats ", "Draws", 0);
+    stats.Losses = ini.GetLongValue("Stats ", "Losses", 0);
+    stats.Winrate = ini.GetLongValue("Stats ", "Winrate", 0);
+
+
+    std::cout << "Stats loaded from existing INI file successfully." << std::endl;
+}
+
+void loadConfig(const std::string& filename, bool& blueLedState, bool& yellowLedState) {
+    CSimpleIniA ini;
+    ini.SetUnicode();
+    if (ini.LoadFile(filename.c_str()) != SI_OK) {
+        std::cout << "Failed to load INI file." << std::endl;
+        return;
+    }
+
+    // Завантажуємо стан діодів
+    blueLedState = ini.GetBoolValue("LEDs", "Blue", false);
+    yellowLedState = ini.GetBoolValue("LEDs", "Yellow", false);
+
+    // Лог станів
+    std::cout << "Blue LED: " << (blueLedState ? "ON" : "OFF") << std::endl;
+    std::cout << "Yellow LED: " << (yellowLedState ? "ON" : "OFF") << std::endl;
+}
+
+void saveConfig(const std::string& filename, bool& blueLedState, bool& yellowLedState) {
+    CSimpleIniA ini;
+    ini.SetUnicode();
+    if (ini.LoadFile(filename.c_str()) != SI_OK) {
+        std::cout << "Failed to load INI file." << std::endl; // Замінено Serial.println
+        return;
+    }
+
+    // Записуємо стан діодів
+    ini.SetBoolValue("LEDs", "Blue", blueLedState);
+    ini.SetBoolValue("LEDs", "Yellow", yellowLedState);
+
+    // Зберігаємо зміни
+    if (ini.SaveFile(filename.c_str()) != SI_OK) {
+        std::cout << "Failed to save INI file." << std::endl; // Замінено Serial.println
+    }
+    else {
+        std::cout << "Configuration saved successfully." << std::endl; // Лог успіху
+    }
+}
+
+void clearSerialBuffer() {
+    char buffer[256];
+    DWORD bytes_read;
+    while (ReadFile(hSerial, buffer, sizeof(buffer), &bytes_read, NULL) && bytes_read > 0) {
+        // Просто зчитуємо всі дані в буфер, нічого не роблячи
+    }
+}
+
+void writeSerialPort(const std::string& data) {
+
+    DWORD bytes_written;
+    if (WriteFile(hSerial, data.c_str(), data.size(), &bytes_written, NULL)) {
+        std::cout << "[Frontend] Sent to Arduino: " << data << std::endl; // Лог даних, які відправляються
+    }
+    else {
+        std::cout << "[Frontend] Error sending to Arduino!" << std::endl; // Лог помилки
+    }
+
+}
+
 std::string readSerialPort() {
-    if (isCIEnvironment()) {
-        if (mockSerialIn.is_open()) {
-            std::string line;
-            if (std::getline(mockSerialIn, line)) {
-                return line;
+    char buffer[256] = { 0 }; // Ініціалізуйте буфер нулями
+    DWORD bytes_read;
+    if (ReadFile(hSerial, buffer, sizeof(buffer) - 1, &bytes_read, NULL)) {
+        buffer[bytes_read] = '\0'; // Додайте термінальний нуль
+        std::cout << "[Backend] Received from Arduino: " << buffer << std::endl; // Лог отриманих даних
+        return std::string(buffer);
+
+    }
+    std::cout << "[Frontend] Error reading from Arduino!" << std::endl; // Лог помилки
+    return ""; // Повертаємо пустий рядок у разі невдачі
+}
+void drawBoard(sf::RenderWindow& window) {
+    for (int i = 0; i <= SIZE_BOARD; ++i) {
+        // Горизонтальні лінії
+        sf::RectangleShape horizontalLine(sf::Vector2f(TILE_SIZE * SIZE_BOARD, 5));
+        horizontalLine.setPosition(0, i * TILE_SIZE);
+        horizontalLine.setFillColor(sf::Color::Black);
+        window.draw(horizontalLine);
+
+        // Вертикальні лінії
+        sf::RectangleShape verticalLine(sf::Vector2f(5, TILE_SIZE * SIZE_BOARD));
+        verticalLine.setPosition(i * TILE_SIZE - 4, 0); // Додаємо поправку
+        verticalLine.setFillColor(sf::Color::Black);
+        window.draw(verticalLine);
+    }
+}
+
+void drawMarks(sf::RenderWindow& window, sf::Font& font) {
+    for (int i = 0; i < SIZE_BOARD; ++i) {
+        for (int j = 0; j < SIZE_BOARD; ++j) {
+            if (board[i][j] != ' ') {
+                sf::Text text;
+                text.setFont(font);
+                text.setString(board[i][j]);
+                text.setCharacterSize(100);
+                text.setPosition(j * TILE_SIZE + 15, i * TILE_SIZE - 20);
+                text.setFillColor(sf::Color::Black);
+                window.draw(text);
             }
         }
-        return "";
     }
-
-    char buffer[256] = { 0 };
-    DWORD bytesRead;
-    if (ReadFile(hSerial, buffer, sizeof(buffer) - 1, &bytesRead, NULL) && bytesRead > 0) {
-        buffer[bytesRead] = '\0';
-        return std::string(buffer);
-    }
-    return "";
 }
 
-// Основна функція
-int main() {
-    const char* portName = "COM7"; // Змініть на ваш COM порт
+// Функція скидання дошки на клієнтській стороні
+void resetBoard() {
+    for (int i = 0; i < SIZE_BOARD; ++i) {
+        for (int j = 0; j < SIZE_BOARD; ++j) {
+            board[i][j] = ' '; // Очищуємо дошку
+        }
+    }
+}
 
-    // Відкриваємо серійний порт
-    if (!openSerialPort(portName)) {
+//функція для малювання ігрових елементів
+void drawGame(sf::RenderWindow& window, sf::Font& font, sf::RectangleShape playerFirstButton, sf::Text playerFirstText, sf::RectangleShape aiFirstButton, sf::Text aiFirstText, sf::RectangleShape restartButton, sf::Text restartText, sf::RectangleShape pvpButton, sf::Text pvpText, sf::RectangleShape settingsButton, sf::Text settingsText) {
+	window.clear(sf::Color::White);   // Очищуємо вікно
+	drawBoard(window);                // Малюємо дошку
+	drawMarks(window, font);          // Малюємо мітки (хрестики і нулики)
+    window.draw(playerFirstButton);   // Малюємо кнопку вибору черговості
+    window.draw(playerFirstText);     // Текст на кнопці "Player First"
+    window.draw(aiFirstButton);       // Малюємо кнопку вибору черговості
+    window.draw(aiFirstText);         // Текст на кнопці "AI First"
+    window.draw(restartButton);       // Малюємо кнопку рестарту
+    window.draw(restartText);         // Малюємо текст на кнопці рестарту
+    window.draw(pvpButton);           // Малюємо кнопку PvP
+    window.draw(pvpText);             // Малюємо текст на кнопці PvP
+    window.draw(settingsButton);       // Малюємо кнопку налаштувань
+    window.draw(settingsText);         // Малюємо текст на кнопці налаштувань
+    window.display();                 // Відображаємо все це у вікні
+
+}
+
+void drawSettingsMenu(sf::RenderWindow& settingsWindow, sf::Font& font, sf::RectangleShape& blueLedButton, sf::Text& blueLedText, sf::RectangleShape& yellowLedButton, sf::Text& yellowLedText) {
+    settingsWindow.clear(sf::Color::White);
+
+    // Кнопка для керування синім діодом
+    settingsWindow.draw(blueLedButton);
+    settingsWindow.draw(blueLedText);
+
+    // Кнопка для керування жовтим діодом
+    settingsWindow.draw(yellowLedButton);
+    settingsWindow.draw(yellowLedText);
+
+    settingsWindow.display();
+}
+
+void openSettingsMenu(sf::Font& font, bool& blueLedState, bool& yellowLedState) {
+    sf::RenderWindow settingsWindow(sf::VideoMode(400, 300), "Settings");
+
+    // Кнопка для керування синім діодом
+    sf::RectangleShape blueLedButton(sf::Vector2f(200, 50));
+    blueLedButton.setPosition(100, 50);
+    blueLedButton.setFillColor(sf::Color::Blue);
+
+    sf::Text blueLedText;
+    blueLedText.setFont(font);
+    blueLedText.setCharacterSize(20);
+    blueLedText.setFillColor(sf::Color::White);
+
+    // Кнопка для керування жовтим діодом
+    sf::RectangleShape yellowLedButton(sf::Vector2f(200, 50));
+    yellowLedButton.setPosition(100, 150);
+    yellowLedButton.setFillColor(sf::Color::Yellow);
+
+    sf::Text yellowLedText;
+    yellowLedText.setFont(font);
+    yellowLedText.setCharacterSize(20);
+    yellowLedText.setFillColor(sf::Color::Black);
+
+    while (settingsWindow.isOpen()) {
+        sf::Event event;
+        while (settingsWindow.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                settingsWindow.close();
+            }
+
+            if (event.type == sf::Event::MouseButtonPressed) {
+                int mouseX = event.mouseButton.x;
+                int mouseY = event.mouseButton.y;
+
+                if (blueLedButton.getGlobalBounds().contains(mouseX, mouseY)) {
+                    blueLedState = !blueLedState; // Змінюємо стан
+                    saveConfig("D:/scad/csad2425Ki401HerbeiOleksandr03/config/config.ini", blueLedState, yellowLedState);
+                    writeSerialPort("BLed\n");
+                }
+                else if (yellowLedButton.getGlobalBounds().contains(mouseX, mouseY)) {
+                    yellowLedState = !yellowLedState; // Змінюємо стан
+                    saveConfig("D:/scad/csad2425Ki401HerbeiOleksandr03/config/config.ini", blueLedState, yellowLedState);
+                    writeSerialPort("Yled\n");
+                }
+            }
+        }
+
+        // Оновлюємо текст кнопок залежно від стану діодів
+        blueLedText.setString(blueLedState ? "Blue LED: ON" : "Blue LED: OFF");
+        blueLedText.setPosition(blueLedButton.getPosition().x + 20, blueLedButton.getPosition().y + 10);
+
+        yellowLedText.setString(yellowLedState ? "Yellow LED: ON" : "Yellow LED: OFF");
+        yellowLedText.setPosition(yellowLedButton.getPosition().x + 20, yellowLedButton.getPosition().y + 10);
+
+        drawSettingsMenu(settingsWindow, font, blueLedButton, blueLedText, yellowLedButton, yellowLedText);
+    }
+}
+
+
+
+int main() {
+    sf::RenderWindow window(sf::VideoMode(TILE_SIZE * SIZE_BOARD, TILE_SIZE * SIZE_BOARD + 200), "Tic-Tac-Toe with Arduino Backend");
+    sf::Font font;
+    if (!font.loadFromFile("C:/Windows/Fonts/Arial.ttf")) {
         return 1;
     }
 
-    int attempts = 5; // Ліміт кількості ітерацій
-    while (attempts--) {
-        // Відправляємо повідомлення
-        std::string message = "Hmm... I'll make this move.\n";
-        writeSerialPort(message);
+    if (!openSerialPort("COM7")) {
+        return 1;
+    }
 
-        // Читаємо відповідь
-        std::string response = readSerialPort();
-        if (!response.empty()) {
-            std::cout << "Server says: " << response << std::endl;
+    bool blueLedState;
+    bool yellowLedState;
+
+    bool gameOver = false;
+    bool resetRequested = false; // Додаємо змінну для фіксації запиту на скидання
+    loadConfig("D:/scad/csad2425Ki401HerbeiOleksandr03/config/config.ini", blueLedState, yellowLedState);
+    loadStatsFromExistingINI("D:/scad/csad2425Ki401HerbeiOleksandr03/config/config.ini");
+    // Створення кнопок для вибору черговості
+    sf::RectangleShape playerFirstButton(sf::Vector2f(150, 50)); // Кнопка вибору черговості гравця
+    playerFirstButton.setPosition((TILE_SIZE * SIZE_BOARD - 300) / 2, TILE_SIZE * SIZE_BOARD + 20);
+    playerFirstButton.setFillColor(sf::Color::Blue);
+    sf::Text playerFirstText;
+    playerFirstText.setFont(font);
+    playerFirstText.setString("Player First");
+    playerFirstText.setCharacterSize(24);
+    playerFirstText.setFillColor(sf::Color::White);
+    playerFirstText.setPosition(playerFirstButton.getPosition().x + 10, playerFirstButton.getPosition().y + 10);
+
+    sf::RectangleShape aiFirstButton(sf::Vector2f(150, 50)); // Кнопка вибору черговості AI
+    aiFirstButton.setPosition((TILE_SIZE * SIZE_BOARD + 50) / 2, TILE_SIZE * SIZE_BOARD + 20);
+    aiFirstButton.setFillColor(sf::Color::Red);
+    sf::Text aiFirstText;
+    aiFirstText.setFont(font);
+    aiFirstText.setString("AI First");
+    aiFirstText.setCharacterSize(24);
+    aiFirstText.setFillColor(sf::Color::White);
+    aiFirstText.setPosition(aiFirstButton.getPosition().x + 10, aiFirstButton.getPosition().y + 10);
+
+    sf::RectangleShape restartButton(sf::Vector2f(150, 50)); // Кнопка перезавантаження
+    restartButton.setPosition(aiFirstButton.getPosition().x, aiFirstButton.getPosition().y + 60); // Позиція праворуч під AI
+    restartButton.setFillColor(sf::Color::Green);
+    sf::Text restartText;
+    restartText.setFont(font);
+    restartText.setString("Restart");
+    restartText.setCharacterSize(24);
+    restartText.setFillColor(sf::Color::White);
+    restartText.setPosition(restartButton.getPosition().x + 10, restartButton.getPosition().y + 10);
+
+    sf::RectangleShape pvpButton(sf::Vector2f(150, 50)); // Кнопка PvP
+    pvpButton.setPosition(playerFirstButton.getPosition().x, playerFirstButton.getPosition().y + 60); // Позиція під Player First
+    pvpButton.setFillColor(sf::Color::Yellow);
+    sf::Text pvpText;
+    pvpText.setFont(font);
+    pvpText.setString("PvP");
+    pvpText.setCharacterSize(24);
+    pvpText.setFillColor(sf::Color::Black);
+    pvpText.setPosition(pvpButton.getPosition().x + 10, pvpButton.getPosition().y + 10);
+
+    // кнопка для налаштування
+    sf::RectangleShape settingsButton(sf::Vector2f(150, 50)); // Кнопка налаштувань
+    settingsButton.setPosition(pvpButton.getPosition().x, pvpButton.getPosition().y + 60); // Позиція під PvP
+    settingsButton.setFillColor(sf::Color::Magenta);
+    sf::Text settingsText;
+    settingsText.setFont(font);
+    settingsText.setString("Settings");
+    settingsText.setCharacterSize(24);
+    settingsText.setFillColor(sf::Color::Black);
+    settingsText.setPosition(settingsButton.getPosition().x + 10, settingsButton.getPosition().y + 10);
+            
+
+    // Початкове відображення елементів у вікні після відкриття
+    drawGame(window,font, playerFirstButton, playerFirstText, aiFirstButton, aiFirstText, restartButton, restartText, pvpButton, pvpText, settingsButton, settingsText);
+    
+
+
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+
+            if (event.type == sf::Event::MouseButtonPressed) {
+                int mouseX = event.mouseButton.x;
+                int mouseY = event.mouseButton.y;
+
+                if (restartButton.getGlobalBounds().contains(mouseX, mouseY)) {
+                    writeSerialPort("reset\n");
+                    resetRequested = true; // Запит на скидання без очищення дошки
+                }
+                else if (playerFirstButton.getGlobalBounds().contains(mouseX, mouseY)) {
+                    writeSerialPort("player\n");
+                    resetBoard(); // Очистити дошку
+                    resetRequested = true; // Запит на скидання з очищенням дошки
+                }
+                else if (aiFirstButton.getGlobalBounds().contains(mouseX, mouseY)) {
+                    writeSerialPort("ai\n");
+                    resetBoard(); // Очистити дошку
+                    resetRequested = true; // Запит на скидання з очищенням дошки
+                }
+                else if (settingsButton.getGlobalBounds().contains(mouseX, mouseY)) {
+                    openSettingsMenu(font, yellowLedState, blueLedState);
+                }
+                else if (pvpButton.getGlobalBounds().contains(mouseX, mouseY)) {
+                    writeSerialPort("pvp\n");
+                    resetBoard(); // Очистити дошку
+                    resetRequested = true; // Запит на скидання з очищенням дошки
+                }
+                else if (!gameOver && !resetRequested) { // Не обробляємо хід, якщо очікуємо на скидання
+                    int row = mouseY / TILE_SIZE;
+                    int col = mouseX / TILE_SIZE;
+
+                    if (row < SIZE_BOARD && col < SIZE_BOARD && board[row][col] == ' ') {
+                        std::string move = std::to_string(row) + "," + std::to_string(col) + "\n";
+                        writeSerialPort(move);
+                        
+                        // Дочекайтеся відповіді від Arduino
+                        std::string response = readSerialPort();
+                        updateBoardFromSerial(response);
+
+                        // Обробка результату гри
+                        if (response.find("X win!") != std::string::npos) {
+                            stats.winsX++;
+                            stats.lossesO++;
+                            stats.pvpGames++;
+                            
+                            gameOver = true;
+                        }
+                        else if (response.find("O win!") != std::string::npos) {
+                            stats.winsO++;
+                            stats.lossesX++;
+                            stats.pvpGames++;
+                            gameOver = true;
+                        }
+                        else if (response.find("AI win!") != std::string::npos) {
+                            stats.Losses++;
+                            stats.Games++;
+                            stats.Winrate = (stats.Wins / stats.Games) * 100;
+                            gameOver = true;
+                        }
+                        else if (response.find("You win!") != std::string::npos) {
+                            stats.Wins++;
+                            stats.Games++;
+                            stats.Winrate = (stats.Wins / stats.Games) * 100;
+                            gameOver = true;
+                        }
+                        else if (response.find("Draw!") != std::string::npos) {
+                            stats.drawsX++;
+                            stats.drawsO++;
+                            stats.Draws++;
+                            stats.Games++;
+                            gameOver = true;
+                        }
+
+                        // Зберігаємо статистику після завершення гри
+                        if (gameOver) {
+                            saveStatsToExistingINI("D:/scad/csad2425Ki401HerbeiOleksandr03/config/config.ini");
+                        }
+
+                        // Оновити відображення дошки після кожного ходу
+                        drawGame(window, font, playerFirstButton, playerFirstText, aiFirstButton, aiFirstText, restartButton, restartText, pvpButton, pvpText, settingsButton, settingsText);
+                    }
+                }
+            }
+        }
+
+        // Перевірка на відповідь від Arduino після запиту скидання
+        if (resetRequested) {
+            std::string response = readSerialPort();
+            if (!response.empty()) {
+                updateBoardFromSerial(response);
+                resetRequested = false; // Завершили скидання
+                gameOver = false;       // Гра триває
+                drawGame(window, font, playerFirstButton, playerFirstText, aiFirstButton, aiFirstText, restartButton, restartText, pvpButton, pvpText, settingsButton, settingsText);
+            }
         }
     }
 
-    // Закриваємо серійний порт
-    CloseHandle(hSerial);
+
+    CloseHandle(hSerial); // Закрити серійний порт після виходу
     return 0;
 }
-

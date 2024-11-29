@@ -8,7 +8,7 @@ This repository implements a Tic-Tac-Toe game with a client-server architecture:
 - **Client**: Graphical User Interface (GUI) built using SFML.
 - **Server**: Arduino-based microcontroller, communicating via UART protocol.
 
-The project includes workflows for building, testing, and managing artifacts as part of Task 2.
+The project includes workflows for building, testing, and managing artifacts as part of Task 3.
 
 ---
 
@@ -32,6 +32,19 @@ The project includes workflows for building, testing, and managing artifacts as 
    - **Run tests** using mocked UART communication.
    - **Upload artifacts**, including binaries and test reports.
 
+### Task 3: Build System and Workflow Integration
+1. **Develop Server and Client Applications**:
+   - Implement the client using SFML for GUI.
+   - Implement the server on an Arduino for game logic and communication.
+2. **Create SW Build System**:
+   - Implement a `Makefile` for building the client application.
+   - Integrate the `Makefile` into the CI/CD workflow using GitHub Actions.
+
+#### Features of the CI/CD Workflow:
+- **Build all binaries** using the `Makefile`.
+- **Run tests** to validate communication between client and server.
+- **Create artifacts**, including binaries and test reports.
+
 ---
 
 ## How to Run
@@ -52,17 +65,18 @@ The project includes workflows for building, testing, and managing artifacts as 
 1. **Clone the Repository**:
    ```bash
    git clone https://github.com/<your-repository-url>.git
+   cd csad2425Ki401HerbeiOleksandr03
 2. **Build the Client**:
    ```bash
-   mkdir build
-   g++ -o build/client lib/client/main.cpp -std=c++17
+   make
 3. **Run the Client**:
    ```bash
-   ./build/client  
- 4. **Run the Server**:
- - Upload the Arduino code (located in `arduino/server`) to the Arduino board using Arduino IDE.
+   ./lib/client/client.exe
+4. **Run the Server**:
+   Upload the Arduino code (located in `Arduino\server`) to the Arduino board using Arduino IDE.   
 
-## GitHub Actions Workflow
+
+   ## GitHub Actions Workflow
 
 ### CI/CD Pipeline
 This project uses GitHub Actions to automate the build and test process:
@@ -70,7 +84,7 @@ This project uses GitHub Actions to automate the build and test process:
 - **Clones Repository**: Uses the `actions/checkout` action.
 - **Sets Up MSYS2**: Installs required tools for building the C++ project.
 - **Mocks UART Communication**: Generates mock serial input for testing.
-- **Builds Project**: Compiles the client-side C++ application.
+- **Builds Project**: Compiles the client-side C++ application using the `Makefile`.
 - **Runs Tests**: Simulates communication between client and server.
 - **Uploads Artifacts**: Stores build outputs and test reports for verification.
 
@@ -101,5 +115,4 @@ This project uses GitHub Actions to automate the build and test process:
 
 - **Student Name**: Herbei Oleksandr
 - **Student Number**: 03
-- **Group**: KI-401
-
+- **Group**: KI-401   

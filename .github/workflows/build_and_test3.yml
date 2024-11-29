@@ -1,0 +1,40 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    # Клонування репозиторію
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Встановлення середовища
+    - name: Set up MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        install: mingw-w64-x86_64-gcc mingw-w64-x86_64-make
+
+    # Налаштування SFML
+    - name: Install SFML
+      run: |
+        pacman -S --noconfirm mingw-w64-x86_64-sfml
+
+    # Компіляція коду
+    - name: Build project
+      run: |
+        make
+
+    # Тестування виконуваного файлу (за потреби)
+    - name: Run tests
+      run: |
+        lib/client/client.exe
