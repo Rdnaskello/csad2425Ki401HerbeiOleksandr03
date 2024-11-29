@@ -13,6 +13,11 @@ hardware/arduino/bootloaders/caterina_LUFA/Caterina.lss
 hardware/arduino/bootloaders/caterina_LUFA/Caterina.elf
 hardware/arduino/bootloaders/caterina_LUFA/Caterina.eep
 hardware/arduino/bootloaders/caterina_LUFA/.dep/
+# Ігноруємо скомпільовані виконувані файли
+client.exe
+
+# Ігноруємо папку build/
+build/
 build/*.zip
 build/*.tar.bz2
 build/windows/work/
@@ -67,4 +72,6 @@ avr-toolchain-*.zip
 
 manifest.mf
 nbbuild.xml
-nbproject
+nbprojectb u i l d /  
+ c l i e n t . e x e  
+ 
