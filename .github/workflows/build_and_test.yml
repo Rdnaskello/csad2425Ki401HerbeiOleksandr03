@@ -1,0 +1,31 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up C++ Compiler
+      uses: actions/setup-cpp@v2
+      with:
+        compiler: g++
+
+    - name: Build Project
+      run: |
+        mkdir -p build
+        g++ -o build/client lib/client/main.cpp -std=c++17
+
+    - name: Test Application
+      run: |
+        ./build/client
