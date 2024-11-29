@@ -97,34 +97,28 @@ std::string readSerialPort() {
 
 // Основна функція
 int main() {
-    const char* portName = "COM7";
+    const char* portName = "COM7"; // Змініть на ваш COM порт
 
+    // Відкриваємо серійний порт
     if (!openSerialPort(portName)) {
         return 1;
     }
 
-    while (true) {
+    int attempts = 5; // Ліміт кількості ітерацій
+    while (attempts--) {
+        // Відправляємо повідомлення
         std::string message = "Hmm... I'll make this move.\n";
         writeSerialPort(message);
 
+        // Читаємо відповідь
         std::string response = readSerialPort();
         if (!response.empty()) {
             std::cout << "Server says: " << response << std::endl;
         }
-
-        std::cout << "Do you want to send another message? (y/n): ";
-        char choice;
-        std::cin >> choice;
-        if (choice == 'n' || choice == 'N') {
-            break;
-        }
     }
 
-    if (isCIEnvironment()) {
-        mockSerialOut.close();
-        mockSerialIn.close();
-    } else {
-        CloseHandle(hSerial);
-    }
+    // Закриваємо серійний порт
+    CloseHandle(hSerial);
     return 0;
 }
+
