@@ -4,25 +4,22 @@ on:
   push:
     branches:
       - main
-      - feature/develop/task2
   pull_request:
     branches:
       - main
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # Використання Windows замість Ubuntu
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install C++ Compiler
+    - name: Set up MSYS2
       uses: msys2/setup-msys2@v2
       with:
         update: true
-        install: >-
-          mingw-w64-x86_64-gcc
 
     - name: Build Project
       run: |
