@@ -34,6 +34,14 @@ jobs:
         set CI=true  # Установлюємо змінну середовища для емуляції
         ./build/client
 
+    - name: Upload binaries and test reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-artifacts
+        path: |
+          build/client
+          mock_serial_in.txt  # Якщо є додаткові файли, додайте їх сюди
+
     - name: Clean up Mock Files
       if: always()  # Завжди виконуємо, навіть якщо тест провалився
       run: |
