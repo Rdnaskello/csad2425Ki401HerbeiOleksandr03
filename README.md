@@ -45,6 +45,16 @@ The project includes workflows for building, testing, and managing artifacts as 
 - **Run tests** to validate communication between client and server.
 - **Create artifacts**, including binaries and test reports.
 
+### Task 4: Create Doxygen Documentation
+1. **Add Doxygen Comments**:
+ - Added comments for all public functions, classes, properties, and fields in both client (C++) and server (Arduino) code.
+ - Explained game logic, UART communication, LED management, and AI algorithms.
+2. **Generate Documentation**:
+ - Used Doxygen to generate HTML documentation for the project.
+ - Provided detailed descriptions for functions, parameters, return values, and global variables.
+3. **Results**:
+ - Comprehensive documentation available in the `docs/html` folder for both client and server code.
+
 ---
 
 ## How to Run

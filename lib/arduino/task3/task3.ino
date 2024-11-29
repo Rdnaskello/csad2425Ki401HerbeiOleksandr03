@@ -1,29 +1,51 @@
+/**
+ * @file main.ino
+ * @brief Arduino backend for Tic-Tac-Toe game with AI and LED indicators.
+ */
 #include <Arduino.h>
 #include <EEPROM.h> // Для збереження стану діодів між перезавантаженнями
 
+/**
+ * @struct Pair
+ * @brief Represents a pair of coordinates (row and column) for the game board.
+ */
 struct Pair {
-    int first;
-    int second;
+    int first;///< Row index
+    int second;///< Column index
 };
 
-const int BlueledPin = 8; // Pin for Led
-const int YellowledPin = 9; 
-char receivedData[10];
-int dataIndex = 0;
-char board[3][3] = {{' ', ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '}}; // gameBoard
-bool gameOver = false;
-int moveCount = 0;
-int blinkCount = 0; 
-bool ledState = LOW;
-char ai = 'O';
-char player = 'X';
-bool waitingForPlayerMove = false;
-bool isPlayerOneTurn = true; // Змінна для відстеження черги ходу гравців
-bool pvpmode = false;
-bool playerTurn = true; // Хто ходить: true - гравець X, false - гравець O
-bool blueLedState = false; 
-bool yellowLedState = false;
+/// Pin for the blue LED.
+const int BlueledPin = 8; 
 
+/// Pin for the yellow LED.
+const int YellowledPin = 9;
+
+/// Buffer for incoming serial data.
+char receivedData[10];
+
+/// Index for the serial data buffer.
+int dataIndex = 0;
+
+/// Game board (3x3 grid).
+char board[3][3] = {{' ', ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '}}; // gameBoard
+bool gameOver = false; ///< Flag to indicate if the game is over.
+int moveCount = 0; ///< Counter for the number of moves made.
+int blinkCount = 0; ///< Counter for LED blinks.
+bool ledState = LOW;///< State of the LED.
+char ai = 'O'; ///< Character representing the AI player.
+char player = 'X'; ///< Character representing the human player.
+bool waitingForPlayerMove = false; ///< Flag to indicate if waiting for player's move.
+bool isPlayerOneTurn = true; ///< Indicates if it is player one's turn.
+bool pvpmode = false; ///< Flag for Player vs Player mode.
+bool playerTurn = true; ///< Current player's turn (true = Player X, false = Player O).
+bool blueLedState = false; ///< State of the blue LED.
+bool yellowLedState = false; ///< State of the yellow LED.
+
+
+/**
+ * @brief Arduino setup function.
+ * Initializes the serial communication, pins, and loads LED states.
+ */
 void setup(){
     Serial.begin(4800);
     pinMode(BlueledPin, OUTPUT);
@@ -35,6 +57,11 @@ void setup(){
     resetBoard(); 
 }
 
+
+/**
+ * @brief Arduino main loop.
+ * Handles serial input and game logic.
+ */
 void loop() {
     // Читання серійної команди
     if (Serial.available() > 0) {
@@ -52,6 +79,11 @@ void loop() {
     }
 }
 
+
+/**
+ * @brief Processes the received command.
+ * Interprets and executes commands sent via serial communication.
+ */
 void processCommand() {
     if (strlen(receivedData) > 9) {
         Serial.println("Error: Command too long!");
@@ -165,7 +197,9 @@ void processCommand() {
     }
 }
 
-// Функція для збереження стану діодів у EEPROM
+/**
+ * @brief Saves the LED states to EEPROM.
+ */
 void saveLedStateToEEPROM() {
     if (EEPROM.read(0) != blueLedState) {
         EEPROM.write(0, blueLedState);
@@ -177,7 +211,9 @@ void saveLedStateToEEPROM() {
     }
 }
 
-// Функція для завантаження стану діодів із EEPROM
+/**
+ * @brief Loads the LED states from EEPROM.
+ */
 void loadLedStateFromEEPROM() {
     int blueState = EEPROM.read(0);
     int yellowState = EEPROM.read(1);
@@ -190,10 +226,19 @@ void loadLedStateFromEEPROM() {
     digitalWrite(YellowledPin, yellowLedState ? HIGH : LOW);
 }
 
+/**
+ * @brief Checks if the AI's move results in a win.
+ * @return True if the AI's move is a winning move, false otherwise.
+ */
 bool isAIMoveWinning() {
     return evaluate(board) == 1; // 1 означає виграш AI
 }
 
+/**
+ * @brief Executes the AI's move.
+ * Finds the best move for the AI using the minimax algorithm.
+ * @return The best move as a Pair (row, column).
+ */
 Pair makeAIMove() {
     Pair bestMove = findBestMove(board); // Знаходимо найкращий хід
     board[bestMove.first][bestMove.second] = 'O'; // AI робить хід за O
@@ -201,6 +246,9 @@ Pair makeAIMove() {
     return bestMove;
 }
 
+/**
+ * @brief Resets the game board to its initial state.
+ */
 void resetBoard() {   
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
@@ -217,7 +265,9 @@ void resetBoard() {
     sendCurrentBoardState();
 }
 
-
+/**
+ * @brief Sends the current state of the game board via serial.
+ */
 void sendCurrentBoardState() {
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
@@ -227,6 +277,10 @@ void sendCurrentBoardState() {
     Serial.println(); // Перехід на новий рядок
 }
 
+/**
+ * @brief Checks if there is a winner on the game board.
+ * @return True if there is a winner, false otherwise.
+ */
 bool checkWinner() {
     // Перевірка горизонтальних та вертикальних ліній
     for (int i = 0; i < 3; i++) {
@@ -239,6 +293,9 @@ bool checkWinner() {
     return false;
 }
 
+/**
+ * @brief Blinks the blue LED.
+ */
 void BlueblinkLED() {
     if (blueLedState) { // Виконуємо тільки якщо діод увімкнений у налаштуваннях
         digitalWrite(BlueledPin, HIGH);
@@ -247,6 +304,9 @@ void BlueblinkLED() {
     }
 }
 
+/**
+ * @brief Blinks the yellow LED.
+ */
 void YellowblinkLED() {
     if (yellowLedState) { // Виконуємо тільки якщо діод увімкнений у налаштуваннях
         digitalWrite(YellowledPin, HIGH);
@@ -255,6 +315,9 @@ void YellowblinkLED() {
     }
 }
 
+/**
+ * @brief Blinks both LEDs in case of a draw.
+ */
 void DrawblinkLED() {
     if (!blueLedState && !yellowLedState) return;
     if (blueLedState && yellowLedState){
@@ -273,8 +336,13 @@ void DrawblinkLED() {
         digitalWrite(YellowledPin, LOW);
     }
 }
-//                                                                        **** AI LOGIC ****
 
+
+/**
+ * @brief Evaluates the current board state.
+ * @param board The game board.
+ * @return 1 if AI wins, -1 if player wins, 0 otherwise.
+ */
 int evaluate(char board[3][3]) {
     // Перевірка рядків і стовпців
     for (int i = 0; i < 3; i++) {
@@ -292,6 +360,11 @@ int evaluate(char board[3][3]) {
     return 0; // Нічия
 }
 
+/**
+ * @brief Checks if there are any empty cells left on the board.
+ * @param board The game board.
+ * @return True if there are empty cells, false otherwise.
+ */
 bool isMovesLeft(char board[3][3]) {
     for (int i = 0; i < 3; i++)
         for (int j = 0; j < 3; j++)
@@ -299,6 +372,12 @@ bool isMovesLeft(char board[3][3]) {
     return true;
 }
 
+/**
+ * @brief Checks if a player can create a fork (two winning moves).
+ * @param board The game board.
+ * @param playerSymbol The symbol of the player ('X' or 'O').
+ * @return True if a fork is possible, false otherwise.
+ */
 bool canCreateFork(char board[3][3], char playerSymbol) {
     int winningMoves = 0;
 
@@ -316,6 +395,15 @@ bool canCreateFork(char board[3][3], char playerSymbol) {
     return winningMoves >= 2;
 }
 
+/**
+ * @brief Implements the minimax algorithm with alpha-beta pruning.
+ * @param board The game board.
+ * @param depth Current depth in the game tree.
+ * @param isMaximizing True if the AI is maximizing its score, false otherwise.
+ * @param alpha Alpha value for pruning.
+ * @param beta Beta value for pruning.
+ * @return The evaluated score of the board.
+ */
 int minimax(char board[3][3], int depth, bool isMaximizing, int alpha, int beta) {
     if (depth > 9) return 0; // Ліміт на глибину
     int score = evaluate(board);
@@ -354,6 +442,11 @@ int minimax(char board[3][3], int depth, bool isMaximizing, int alpha, int beta)
     }
 }
 
+/**
+ * @brief Finds the best move for the AI using evaluation and minimax.
+ * @param board The game board.
+ * @return The best move as a Pair (row, column).
+ */
 Pair findBestMove(char board[3][3]) {
     Pair bestMove = {-1, -1};
     int bestVal = -1000;
@@ -397,6 +490,13 @@ Pair findBestMove(char board[3][3]) {
     }
     return bestMove;
 }
+
+/**
+ * @brief Finds a winning move for a given player.
+ * @param board The game board.
+ * @param playerSymbol The player's symbol ('X' or 'O').
+ * @return The winning move as a Pair (row, column), or {-1, -1} if none found.
+ */
 Pair findWinningMove(char board[3][3], char playerSymbol) {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
@@ -412,6 +512,13 @@ Pair findWinningMove(char board[3][3], char playerSymbol) {
     }
     return {-1, -1}; // Немає виграшних ходів
 }
+
+/**
+ * @brief Finds a move to block the opponent's win.
+ * @param board The game board.
+ * @param opponent The opponent's symbol ('X' or 'O').
+ * @return The blocking move as a Pair (row, column), or {-1, -1} if none found.
+ */
 Pair findBlockingMove(char board[3][3], char opponent) {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
@@ -427,6 +534,13 @@ Pair findBlockingMove(char board[3][3], char opponent) {
     }
     return {-1, -1}; // Немає загроз
 }
+
+/**
+ * @brief Finds a move that creates a fork for a player.
+ * @param board The game board.
+ * @param playerSymbol The player's symbol ('X' or 'O').
+ * @return The fork move as a Pair (row, column), or {-1, -1} if none found.
+ */
 Pair findForkMove(char board[3][3], char playerSymbol) {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {

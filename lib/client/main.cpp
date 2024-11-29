@@ -1,16 +1,29 @@
+/**
+ * @file main.cpp
+ * @brief Tic-Tac-Toe game with Arduino backend and SFML frontend.
+ */
+
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <windows.h> // Для роботи з серійним портом на Windows
 #include "D:/simpleini-master/simpleini-master/SimpleIni.h"
+/// Size of the game board (3x3).
+const int SIZE_BOARD = 3;
+/// Size of each tile in pixels.
+const int TILE_SIZE = 100; 
+/// Game board representation.
+char board[SIZE_BOARD][SIZE_BOARD] = { {' ', ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '} }; 
 
-const int SIZE_BOARD = 3; // Розмір дошки 3x3
-const int TILE_SIZE = 100; // Розмір однієї клітини
-char board[SIZE_BOARD][SIZE_BOARD] = { {' ', ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '} }; // Ігрова дошка
 
-HANDLE hSerial;
-DCB dcbSerialParams = { 0 };
-COMMTIMEOUTS timeouts = { 0 };
+HANDLE hSerial; ///< Handle for the serial port.
+DCB dcbSerialParams = { 0 }; ///< Serial port configuration parameters.
+COMMTIMEOUTS timeouts = { 0 }; ///< Serial port timeouts configuration.
 
+/**
+ * @brief Opens the serial port with specified configurations.
+ * @param portName Name of the serial port (e.g., "COM7").
+ * @return True if the port is opened successfully, false otherwise.
+ */
 
 bool openSerialPort(const char* portName) {
     hSerial = CreateFileA(portName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -43,6 +56,11 @@ bool openSerialPort(const char* portName) {
     return true;
 }
 
+/**
+ * @brief Updates the game board based on the response received from the Arduino.
+ * @param response Response received from the Arduino.
+ */
+
 void updateBoardFromSerial(const std::string& response) {
     if (response.length() < SIZE_BOARD * SIZE_BOARD) {
         return; // Вийти з функції, якщо недостатньо даних
@@ -56,26 +74,35 @@ void updateBoardFromSerial(const std::string& response) {
     }
 }
 
+/**
+ * @brief Structure for storing game statistics.
+ */
+
 struct Stats {
     // PvP
-    int pvpGames = 0;
-    int winsX = 0;
-    int lossesX = 0;
-    int drawsX = 0;
-    int winsO = 0;
-    int lossesO = 0;
-    int drawsO = 0;
+    int pvpGames = 0; ///< Number of PvP games played.
+    int winsX = 0; ///< Number of wins for player X.
+    int lossesX = 0; ///< Number of losses for player X.
+    int drawsX = 0; ///< Number of draws for player X.
+    int winsO = 0; ///< Number of wins for player O.
+    int lossesO = 0; ///< Number of losses for player O.
+    int drawsO = 0; ///< Number of draws for player O.
 
     // AI Player First
-    int Games = 0;
-    int Wins = 0;
-    int Draws = 0;
-    int Losses = 0;
-    int Winrate = 0;
+    int Games = 0; ///< Number of games played.
+    int Wins = 0;  ///< Number of wins.
+    int Draws = 0;  ///< Number of draws.
+    int Losses = 0; ///< Number of losses.
+    int Winrate = 0;    ///< Winrate in percentage.
 
 };
 
-Stats stats;
+Stats stats; ///< Game statistics.
+
+/**
+ * @brief Saves the game statistics to an existing INI file.
+ * @param filename Name of the INI file.
+ */
 
 void saveStatsToExistingINI(const std::string& filename) {
     CSimpleIniA ini;
@@ -113,6 +140,11 @@ void saveStatsToExistingINI(const std::string& filename) {
     }
 }
 
+/**
+ * @brief Loads the game statistics from an existing INI file.
+ * @param filename Name of the INI file.
+ */
+
 void loadStatsFromExistingINI(const std::string& filename) {
     CSimpleIniA ini;
     ini.SetUnicode();
@@ -143,6 +175,13 @@ void loadStatsFromExistingINI(const std::string& filename) {
     std::cout << "Stats loaded from existing INI file successfully." << std::endl;
 }
 
+/**
+ * @brief Loads the configuration from an INI file.
+ * @param filename Name of the INI file.
+ * @param blueLedState State of the blue LED.
+ * @param yellowLedState State of the yellow LED.
+ */
+
 void loadConfig(const std::string& filename, bool& blueLedState, bool& yellowLedState) {
     CSimpleIniA ini;
     ini.SetUnicode();
@@ -159,6 +198,13 @@ void loadConfig(const std::string& filename, bool& blueLedState, bool& yellowLed
     std::cout << "Blue LED: " << (blueLedState ? "ON" : "OFF") << std::endl;
     std::cout << "Yellow LED: " << (yellowLedState ? "ON" : "OFF") << std::endl;
 }
+
+/**
+ * @brief Saves LED configuration to an INI file.
+ * @param filename Path to the INI file.
+ * @param blueLedState Current state of the blue LED.
+ * @param yellowLedState Current state of the yellow LED.
+ */
 
 void saveConfig(const std::string& filename, bool& blueLedState, bool& yellowLedState) {
     CSimpleIniA ini;
@@ -181,6 +227,9 @@ void saveConfig(const std::string& filename, bool& blueLedState, bool& yellowLed
     }
 }
 
+/**
+ * @brief Clears the serial buffer by reading all available data.
+ */
 void clearSerialBuffer() {
     char buffer[256];
     DWORD bytes_read;
@@ -189,6 +238,11 @@ void clearSerialBuffer() {
     }
 }
 
+
+/**
+ * @brief Writes data to the serial port.
+ * @param data String to send to the Arduino.
+ */
 void writeSerialPort(const std::string& data) {
 
     DWORD bytes_written;
@@ -200,6 +254,11 @@ void writeSerialPort(const std::string& data) {
     }
 
 }
+
+/**
+ * @brief Reads data from the serial port.
+ * @return String received from the Arduino.
+ */
 
 std::string readSerialPort() {
     char buffer[256] = { 0 }; // Ініціалізуйте буфер нулями
@@ -213,6 +272,11 @@ std::string readSerialPort() {
     std::cout << "[Frontend] Error reading from Arduino!" << std::endl; // Лог помилки
     return ""; // Повертаємо пустий рядок у разі невдачі
 }
+
+/**
+ * @brief Draws the Tic-Tac-Toe board grid.
+ * @param window Reference to the SFML window.
+ */
 void drawBoard(sf::RenderWindow& window) {
     for (int i = 0; i <= SIZE_BOARD; ++i) {
         // Горизонтальні лінії
@@ -229,6 +293,12 @@ void drawBoard(sf::RenderWindow& window) {
     }
 }
 
+
+/**
+ * @brief Draws X and O marks on the game board.
+ * @param window Reference to the SFML window.
+ * @param font Font used for the marks.
+ */
 void drawMarks(sf::RenderWindow& window, sf::Font& font) {
     for (int i = 0; i < SIZE_BOARD; ++i) {
         for (int j = 0; j < SIZE_BOARD; ++j) {
@@ -245,7 +315,9 @@ void drawMarks(sf::RenderWindow& window, sf::Font& font) {
     }
 }
 
-// Функція скидання дошки на клієнтській стороні
+/**
+ * @brief Resets the game board to its initial state.
+ */
 void resetBoard() {
     for (int i = 0; i < SIZE_BOARD; ++i) {
         for (int j = 0; j < SIZE_BOARD; ++j) {
@@ -254,9 +326,23 @@ void resetBoard() {
     }
 }
 
-//функція для малювання ігрових елементів
+/**
+ * @brief Draws the game interface including board, marks, and buttons.
+ * @param window Reference to the SFML window.
+ * @param font Font used for button texts.
+ * @param playerFirstButton Rectangle shape for the "Player First" button.
+ * @param playerFirstText Text displayed on the "Player First" button.
+ * @param aiFirstButton Rectangle shape for the "AI First" button.
+ * @param aiFirstText Text displayed on the "AI First" button.
+ * @param restartButton Rectangle shape for the "Restart" button.
+ * @param restartText Text displayed on the "Restart" button.
+ * @param pvpButton Rectangle shape for the "PvP" button.
+ * @param pvpText Text displayed on the "PvP" button.
+ * @param settingsButton Rectangle shape for the "Settings" button.
+ * @param settingsText Text displayed on the "Settings" button.
+ */
 void drawGame(sf::RenderWindow& window, sf::Font& font, sf::RectangleShape playerFirstButton, sf::Text playerFirstText, sf::RectangleShape aiFirstButton, sf::Text aiFirstText, sf::RectangleShape restartButton, sf::Text restartText, sf::RectangleShape pvpButton, sf::Text pvpText, sf::RectangleShape settingsButton, sf::Text settingsText) {
-	window.clear(sf::Color::White);   // Очищуємо вікно
+	window.clear(sf::Color::White);   
 	drawBoard(window);                // Малюємо дошку
 	drawMarks(window, font);          // Малюємо мітки (хрестики і нулики)
     window.draw(playerFirstButton);   // Малюємо кнопку вибору черговості
@@ -273,6 +359,21 @@ void drawGame(sf::RenderWindow& window, sf::Font& font, sf::RectangleShape playe
 
 }
 
+/**
+ * @brief Draws the game interface including board, marks, and buttons.
+ * @param window Reference to the SFML window.
+ * @param font Font used for button texts.
+ * @param playerFirstButton Rectangle shape for the "Player First" button.
+ * @param playerFirstText Text displayed on the "Player First" button.
+ * @param aiFirstButton Rectangle shape for the "AI First" button.
+ * @param aiFirstText Text displayed on the "AI First" button.
+ * @param restartButton Rectangle shape for the "Restart" button.
+ * @param restartText Text displayed on the "Restart" button.
+ * @param pvpButton Rectangle shape for the "PvP" button.
+ * @param pvpText Text displayed on the "PvP" button.
+ * @param settingsButton Rectangle shape for the "Settings" button.
+ * @param settingsText Text displayed on the "Settings" button.
+ */
 void drawSettingsMenu(sf::RenderWindow& settingsWindow, sf::Font& font, sf::RectangleShape& blueLedButton, sf::Text& blueLedText, sf::RectangleShape& yellowLedButton, sf::Text& yellowLedText) {
     settingsWindow.clear(sf::Color::White);
 
@@ -287,6 +388,12 @@ void drawSettingsMenu(sf::RenderWindow& settingsWindow, sf::Font& font, sf::Rect
     settingsWindow.display();
 }
 
+/**
+ * @brief Opens the settings menu for controlling LED states.
+ * @param font Font used for the settings menu.
+ * @param blueLedState Reference to the state of the blue LED.
+ * @param yellowLedState Reference to the state of the yellow LED.
+ */
 void openSettingsMenu(sf::Font& font, bool& blueLedState, bool& yellowLedState) {
     sf::RenderWindow settingsWindow(sf::VideoMode(400, 300), "Settings");
 
@@ -347,6 +454,11 @@ void openSettingsMenu(sf::Font& font, bool& blueLedState, bool& yellowLedState) 
 
 
 
+/**
+ * @brief Main function for the Tic-Tac-Toe game.
+ * Initializes the game window, serial communication, and event handling.
+ * @return Exit status of the program (0 for success).
+ */
 int main() {
     sf::RenderWindow window(sf::VideoMode(TILE_SIZE * SIZE_BOARD, TILE_SIZE * SIZE_BOARD + 200), "Tic-Tac-Toe with Arduino Backend");
     sf::Font font;
@@ -417,8 +529,8 @@ int main() {
     settingsText.setFillColor(sf::Color::Black);
     settingsText.setPosition(settingsButton.getPosition().x + 10, settingsButton.getPosition().y + 10);
             
-
-    // Початкове відображення елементів у вікні після відкриття
+    // Initialization of game buttons and their positions...
+    // (This section is already documented in function parameters above.)
     drawGame(window,font, playerFirstButton, playerFirstText, aiFirstButton, aiFirstText, restartButton, restartText, pvpButton, pvpText, settingsButton, settingsText);
     
 

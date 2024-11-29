@@ -1,0 +1,352 @@
+\doxysection{client/main.cpp File Reference}
+\hypertarget{main_8cpp}{}\label{main_8cpp}\index{client/main.cpp@{client/main.cpp}}
+
+
+Tic-\/\+Tac-\/\+Toe game with Arduino backend and SFML frontend.  
+
+
+{\ttfamily \#include $<$SFML/\+Graphics.\+hpp$>$}\newline
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include $<$windows.\+h$>$}\newline
+{\ttfamily \#include "{}D\+:/simpleini-\/master/simpleini-\/master/\+Simple\+Ini.\+h"{}}\newline
+\doxysubsubsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct_stats}{Stats}}
+\begin{DoxyCompactList}\small\item\em Structure for storing game statistics. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{main_8cpp_a45ad6dc34b313dc055c596f921074d63}{open\+Serial\+Port}} (const char \texorpdfstring{$\ast$}{*}port\+Name)
+\begin{DoxyCompactList}\small\item\em Opens the serial port with specified configurations. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_a6434e0ca239f6458c5c01bde57c156e8}{update\+Board\+From\+Serial}} (const std\+::string \&response)
+\begin{DoxyCompactList}\small\item\em Updates the game board based on the response received from the Arduino. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_a12e1401164f79d107d1250b4a2a51b60}{save\+Stats\+To\+Existing\+INI}} (const std\+::string \&filename)
+\begin{DoxyCompactList}\small\item\em Saves the game statistics to an existing INI file. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_a23e5b90b6ad5e3934b60643ea08a2055}{load\+Stats\+From\+Existing\+INI}} (const std\+::string \&filename)
+\begin{DoxyCompactList}\small\item\em Loads the game statistics from an existing INI file. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_ae5cbe8a8af87bdb312f468b4f3b5e22a}{load\+Config}} (const std\+::string \&filename, bool \&blue\+Led\+State, bool \&yellow\+Led\+State)
+\begin{DoxyCompactList}\small\item\em Loads the configuration from an INI file. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_abcf397d25ec4cb6d7b9c5961046e3507}{save\+Config}} (const std\+::string \&filename, bool \&blue\+Led\+State, bool \&yellow\+Led\+State)
+\begin{DoxyCompactList}\small\item\em Saves LED configuration to an INI file. \end{DoxyCompactList}\item 
+\Hypertarget{main_8cpp_ab670ad8be4fe37956c781221ba347c6c}\label{main_8cpp_ab670ad8be4fe37956c781221ba347c6c} 
+void {\bfseries clear\+Serial\+Buffer} ()
+\begin{DoxyCompactList}\small\item\em Clears the serial buffer by reading all available data. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_a3b3f4ea946e8a7771f359d415f4df9fd}{write\+Serial\+Port}} (const std\+::string \&data)
+\begin{DoxyCompactList}\small\item\em Writes data to the serial port. \end{DoxyCompactList}\item 
+std\+::string \mbox{\hyperlink{main_8cpp_a76952070a776c6462d4bcb519c29fa5a}{read\+Serial\+Port}} ()
+\begin{DoxyCompactList}\small\item\em Reads data from the serial port. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_acdaa71b00e4f0b96fca86f08da0470ab}{draw\+Board}} (sf\+::\+Render\+Window \&window)
+\begin{DoxyCompactList}\small\item\em Draws the Tic-\/\+Tac-\/\+Toe board grid. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_a03b7bc8fdd0bef89ac668cfaf67fd9fc}{draw\+Marks}} (sf\+::\+Render\+Window \&window, sf\+::\+Font \&font)
+\begin{DoxyCompactList}\small\item\em Draws X and O marks on the game board. \end{DoxyCompactList}\item 
+\Hypertarget{main_8cpp_a6728eac8015f483c7b84219300ae3ccf}\label{main_8cpp_a6728eac8015f483c7b84219300ae3ccf} 
+void {\bfseries reset\+Board} ()
+\begin{DoxyCompactList}\small\item\em Resets the game board to its initial state. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_a04c3cdb7c02251a92b9405d1f8e8f99e}{draw\+Game}} (sf\+::\+Render\+Window \&window, sf\+::\+Font \&font, sf\+::\+Rectangle\+Shape player\+First\+Button, sf\+::\+Text player\+First\+Text, sf\+::\+Rectangle\+Shape ai\+First\+Button, sf\+::\+Text ai\+First\+Text, sf\+::\+Rectangle\+Shape restart\+Button, sf\+::\+Text restart\+Text, sf\+::\+Rectangle\+Shape pvp\+Button, sf\+::\+Text pvp\+Text, sf\+::\+Rectangle\+Shape settings\+Button, sf\+::\+Text settings\+Text)
+\begin{DoxyCompactList}\small\item\em Draws the game interface including board, marks, and buttons. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_ad7f088ce3941e55344cdab57999e116d}{draw\+Settings\+Menu}} (sf\+::\+Render\+Window \&settings\+Window, sf\+::\+Font \&font, sf\+::\+Rectangle\+Shape \&blue\+Led\+Button, sf\+::\+Text \&blue\+Led\+Text, sf\+::\+Rectangle\+Shape \&yellow\+Led\+Button, sf\+::\+Text \&yellow\+Led\+Text)
+\begin{DoxyCompactList}\small\item\em Draws the game interface including board, marks, and buttons. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{main_8cpp_a5da29c7a77b794c692486bfccdd6873e}{open\+Settings\+Menu}} (sf\+::\+Font \&font, bool \&blue\+Led\+State, bool \&yellow\+Led\+State)
+\begin{DoxyCompactList}\small\item\em Opens the settings menu for controlling LED states. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{main_8cpp_ae66f6b31b5ad750f1fe042a706a4e3d4}{main}} ()
+\begin{DoxyCompactList}\small\item\em Main function for the Tic-\/\+Tac-\/\+Toe game. Initializes the game window, serial communication, and event handling. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\Hypertarget{main_8cpp_a2b1a33eab686c2a652465c9853f67f0a}\label{main_8cpp_a2b1a33eab686c2a652465c9853f67f0a} 
+const int {\bfseries SIZE\+\_\+\+BOARD} = 3
+\begin{DoxyCompactList}\small\item\em Size of the game board (3x3). \end{DoxyCompactList}\item 
+\Hypertarget{main_8cpp_a8adcd57e318ecb77a2ffe6ec188f005b}\label{main_8cpp_a8adcd57e318ecb77a2ffe6ec188f005b} 
+const int {\bfseries TILE\+\_\+\+SIZE} = 100
+\begin{DoxyCompactList}\small\item\em Size of each tile in pixels. \end{DoxyCompactList}\item 
+\Hypertarget{main_8cpp_ae6faf7679369708abd0fe03c143c0f13}\label{main_8cpp_ae6faf7679369708abd0fe03c143c0f13} 
+char {\bfseries board} \mbox{[}\mbox{\hyperlink{main_8cpp_a2b1a33eab686c2a652465c9853f67f0a}{SIZE\+\_\+\+BOARD}}\mbox{]}\mbox{[}\mbox{\hyperlink{main_8cpp_a2b1a33eab686c2a652465c9853f67f0a}{SIZE\+\_\+\+BOARD}}\mbox{]} = \{ \{\textquotesingle{} \textquotesingle{}, \textquotesingle{} \textquotesingle{}, \textquotesingle{} \textquotesingle{}\}, \{\textquotesingle{} \textquotesingle{}, \textquotesingle{} \textquotesingle{}, \textquotesingle{} \textquotesingle{}\}, \{\textquotesingle{} \textquotesingle{}, \textquotesingle{} \textquotesingle{}, \textquotesingle{} \textquotesingle{}\} \}
+\begin{DoxyCompactList}\small\item\em Game board representation. \end{DoxyCompactList}\item 
+\Hypertarget{main_8cpp_a23f559a9cd1d7e4648193a22a69a8f75}\label{main_8cpp_a23f559a9cd1d7e4648193a22a69a8f75} 
+HANDLE {\bfseries h\+Serial}
+\begin{DoxyCompactList}\small\item\em Handle for the serial port. \end{DoxyCompactList}\item 
+\Hypertarget{main_8cpp_a5e97bfd2768ed434757cd3c1eb964413}\label{main_8cpp_a5e97bfd2768ed434757cd3c1eb964413} 
+DCB {\bfseries dcb\+Serial\+Params} = \{ 0 \}
+\begin{DoxyCompactList}\small\item\em Serial port configuration parameters. \end{DoxyCompactList}\item 
+\Hypertarget{main_8cpp_ae90ed8887baa4ec8f1398952fe1cfd31}\label{main_8cpp_ae90ed8887baa4ec8f1398952fe1cfd31} 
+COMMTIMEOUTS {\bfseries timeouts} = \{ 0 \}
+\begin{DoxyCompactList}\small\item\em Serial port timeouts configuration. \end{DoxyCompactList}\item 
+\Hypertarget{main_8cpp_a5925d216740c89f43482df806fd14e8c}\label{main_8cpp_a5925d216740c89f43482df806fd14e8c} 
+\mbox{\hyperlink{struct_stats}{Stats}} {\bfseries stats}
+\begin{DoxyCompactList}\small\item\em Game statistics. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Tic-\/\+Tac-\/\+Toe game with Arduino backend and SFML frontend. 
+
+
+
+\doxysubsection{Function Documentation}
+\Hypertarget{main_8cpp_acdaa71b00e4f0b96fca86f08da0470ab}\index{main.cpp@{main.cpp}!drawBoard@{drawBoard}}
+\index{drawBoard@{drawBoard}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{drawBoard()}{drawBoard()}}
+{\footnotesize\ttfamily \label{main_8cpp_acdaa71b00e4f0b96fca86f08da0470ab} 
+void draw\+Board (\begin{DoxyParamCaption}\item[{sf\+::\+Render\+Window \&}]{window}{}\end{DoxyParamCaption})}
+
+
+
+Draws the Tic-\/\+Tac-\/\+Toe board grid. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em window} & Reference to the SFML window. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{main_8cpp_a04c3cdb7c02251a92b9405d1f8e8f99e}\index{main.cpp@{main.cpp}!drawGame@{drawGame}}
+\index{drawGame@{drawGame}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{drawGame()}{drawGame()}}
+{\footnotesize\ttfamily \label{main_8cpp_a04c3cdb7c02251a92b9405d1f8e8f99e} 
+void draw\+Game (\begin{DoxyParamCaption}\item[{sf\+::\+Render\+Window \&}]{window}{, }\item[{sf\+::\+Font \&}]{font}{, }\item[{sf\+::\+Rectangle\+Shape}]{player\+First\+Button}{, }\item[{sf\+::\+Text}]{player\+First\+Text}{, }\item[{sf\+::\+Rectangle\+Shape}]{ai\+First\+Button}{, }\item[{sf\+::\+Text}]{ai\+First\+Text}{, }\item[{sf\+::\+Rectangle\+Shape}]{restart\+Button}{, }\item[{sf\+::\+Text}]{restart\+Text}{, }\item[{sf\+::\+Rectangle\+Shape}]{pvp\+Button}{, }\item[{sf\+::\+Text}]{pvp\+Text}{, }\item[{sf\+::\+Rectangle\+Shape}]{settings\+Button}{, }\item[{sf\+::\+Text}]{settings\+Text}{}\end{DoxyParamCaption})}
+
+
+
+Draws the game interface including board, marks, and buttons. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em window} & Reference to the SFML window. \\
+\hline
+{\em font} & Font used for button texts. \\
+\hline
+{\em player\+First\+Button} & Rectangle shape for the "{}\+Player First"{} button. \\
+\hline
+{\em player\+First\+Text} & Text displayed on the "{}\+Player First"{} button. \\
+\hline
+{\em ai\+First\+Button} & Rectangle shape for the "{}\+AI First"{} button. \\
+\hline
+{\em ai\+First\+Text} & Text displayed on the "{}\+AI First"{} button. \\
+\hline
+{\em restart\+Button} & Rectangle shape for the "{}\+Restart"{} button. \\
+\hline
+{\em restart\+Text} & Text displayed on the "{}\+Restart"{} button. \\
+\hline
+{\em pvp\+Button} & Rectangle shape for the "{}\+Pv\+P"{} button. \\
+\hline
+{\em pvp\+Text} & Text displayed on the "{}\+Pv\+P"{} button. \\
+\hline
+{\em settings\+Button} & Rectangle shape for the "{}\+Settings"{} button. \\
+\hline
+{\em settings\+Text} & Text displayed on the "{}\+Settings"{} button. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{main_8cpp_a03b7bc8fdd0bef89ac668cfaf67fd9fc}\index{main.cpp@{main.cpp}!drawMarks@{drawMarks}}
+\index{drawMarks@{drawMarks}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{drawMarks()}{drawMarks()}}
+{\footnotesize\ttfamily \label{main_8cpp_a03b7bc8fdd0bef89ac668cfaf67fd9fc} 
+void draw\+Marks (\begin{DoxyParamCaption}\item[{sf\+::\+Render\+Window \&}]{window}{, }\item[{sf\+::\+Font \&}]{font}{}\end{DoxyParamCaption})}
+
+
+
+Draws X and O marks on the game board. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em window} & Reference to the SFML window. \\
+\hline
+{\em font} & Font used for the marks. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{main_8cpp_ad7f088ce3941e55344cdab57999e116d}\index{main.cpp@{main.cpp}!drawSettingsMenu@{drawSettingsMenu}}
+\index{drawSettingsMenu@{drawSettingsMenu}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{drawSettingsMenu()}{drawSettingsMenu()}}
+{\footnotesize\ttfamily \label{main_8cpp_ad7f088ce3941e55344cdab57999e116d} 
+void draw\+Settings\+Menu (\begin{DoxyParamCaption}\item[{sf\+::\+Render\+Window \&}]{settings\+Window}{, }\item[{sf\+::\+Font \&}]{font}{, }\item[{sf\+::\+Rectangle\+Shape \&}]{blue\+Led\+Button}{, }\item[{sf\+::\+Text \&}]{blue\+Led\+Text}{, }\item[{sf\+::\+Rectangle\+Shape \&}]{yellow\+Led\+Button}{, }\item[{sf\+::\+Text \&}]{yellow\+Led\+Text}{}\end{DoxyParamCaption})}
+
+
+
+Draws the game interface including board, marks, and buttons. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em window} & Reference to the SFML window. \\
+\hline
+{\em font} & Font used for button texts. \\
+\hline
+{\em player\+First\+Button} & Rectangle shape for the "{}\+Player First"{} button. \\
+\hline
+{\em player\+First\+Text} & Text displayed on the "{}\+Player First"{} button. \\
+\hline
+{\em ai\+First\+Button} & Rectangle shape for the "{}\+AI First"{} button. \\
+\hline
+{\em ai\+First\+Text} & Text displayed on the "{}\+AI First"{} button. \\
+\hline
+{\em restart\+Button} & Rectangle shape for the "{}\+Restart"{} button. \\
+\hline
+{\em restart\+Text} & Text displayed on the "{}\+Restart"{} button. \\
+\hline
+{\em pvp\+Button} & Rectangle shape for the "{}\+Pv\+P"{} button. \\
+\hline
+{\em pvp\+Text} & Text displayed on the "{}\+Pv\+P"{} button. \\
+\hline
+{\em settings\+Button} & Rectangle shape for the "{}\+Settings"{} button. \\
+\hline
+{\em settings\+Text} & Text displayed on the "{}\+Settings"{} button. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{main_8cpp_ae5cbe8a8af87bdb312f468b4f3b5e22a}\index{main.cpp@{main.cpp}!loadConfig@{loadConfig}}
+\index{loadConfig@{loadConfig}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{loadConfig()}{loadConfig()}}
+{\footnotesize\ttfamily \label{main_8cpp_ae5cbe8a8af87bdb312f468b4f3b5e22a} 
+void load\+Config (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{filename}{, }\item[{bool \&}]{blue\+Led\+State}{, }\item[{bool \&}]{yellow\+Led\+State}{}\end{DoxyParamCaption})}
+
+
+
+Loads the configuration from an INI file. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filename} & Name of the INI file. \\
+\hline
+{\em blue\+Led\+State} & State of the blue LED. \\
+\hline
+{\em yellow\+Led\+State} & State of the yellow LED. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{main_8cpp_a23e5b90b6ad5e3934b60643ea08a2055}\index{main.cpp@{main.cpp}!loadStatsFromExistingINI@{loadStatsFromExistingINI}}
+\index{loadStatsFromExistingINI@{loadStatsFromExistingINI}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{loadStatsFromExistingINI()}{loadStatsFromExistingINI()}}
+{\footnotesize\ttfamily \label{main_8cpp_a23e5b90b6ad5e3934b60643ea08a2055} 
+void load\+Stats\+From\+Existing\+INI (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{filename}{}\end{DoxyParamCaption})}
+
+
+
+Loads the game statistics from an existing INI file. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filename} & Name of the INI file. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{main_8cpp_ae66f6b31b5ad750f1fe042a706a4e3d4}\index{main.cpp@{main.cpp}!main@{main}}
+\index{main@{main}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily \label{main_8cpp_ae66f6b31b5ad750f1fe042a706a4e3d4} 
+int main (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+Main function for the Tic-\/\+Tac-\/\+Toe game. Initializes the game window, serial communication, and event handling. 
+
+\begin{DoxyReturn}{Returns}
+Exit status of the program (0 for success). 
+\end{DoxyReturn}
+\Hypertarget{main_8cpp_a45ad6dc34b313dc055c596f921074d63}\index{main.cpp@{main.cpp}!openSerialPort@{openSerialPort}}
+\index{openSerialPort@{openSerialPort}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{openSerialPort()}{openSerialPort()}}
+{\footnotesize\ttfamily \label{main_8cpp_a45ad6dc34b313dc055c596f921074d63} 
+bool open\+Serial\+Port (\begin{DoxyParamCaption}\item[{const char \texorpdfstring{$\ast$}{*}}]{port\+Name}{}\end{DoxyParamCaption})}
+
+
+
+Opens the serial port with specified configurations. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em port\+Name} & Name of the serial port (e.\+g., "{}\+COM7"{}). \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the port is opened successfully, false otherwise. 
+\end{DoxyReturn}
+\Hypertarget{main_8cpp_a5da29c7a77b794c692486bfccdd6873e}\index{main.cpp@{main.cpp}!openSettingsMenu@{openSettingsMenu}}
+\index{openSettingsMenu@{openSettingsMenu}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{openSettingsMenu()}{openSettingsMenu()}}
+{\footnotesize\ttfamily \label{main_8cpp_a5da29c7a77b794c692486bfccdd6873e} 
+void open\+Settings\+Menu (\begin{DoxyParamCaption}\item[{sf\+::\+Font \&}]{font}{, }\item[{bool \&}]{blue\+Led\+State}{, }\item[{bool \&}]{yellow\+Led\+State}{}\end{DoxyParamCaption})}
+
+
+
+Opens the settings menu for controlling LED states. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em font} & Font used for the settings menu. \\
+\hline
+{\em blue\+Led\+State} & Reference to the state of the blue LED. \\
+\hline
+{\em yellow\+Led\+State} & Reference to the state of the yellow LED. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{main_8cpp_a76952070a776c6462d4bcb519c29fa5a}\index{main.cpp@{main.cpp}!readSerialPort@{readSerialPort}}
+\index{readSerialPort@{readSerialPort}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{readSerialPort()}{readSerialPort()}}
+{\footnotesize\ttfamily \label{main_8cpp_a76952070a776c6462d4bcb519c29fa5a} 
+std\+::string read\+Serial\+Port (\begin{DoxyParamCaption}{}{}\end{DoxyParamCaption})}
+
+
+
+Reads data from the serial port. 
+
+\begin{DoxyReturn}{Returns}
+String received from the Arduino. 
+\end{DoxyReturn}
+\Hypertarget{main_8cpp_abcf397d25ec4cb6d7b9c5961046e3507}\index{main.cpp@{main.cpp}!saveConfig@{saveConfig}}
+\index{saveConfig@{saveConfig}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{saveConfig()}{saveConfig()}}
+{\footnotesize\ttfamily \label{main_8cpp_abcf397d25ec4cb6d7b9c5961046e3507} 
+void save\+Config (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{filename}{, }\item[{bool \&}]{blue\+Led\+State}{, }\item[{bool \&}]{yellow\+Led\+State}{}\end{DoxyParamCaption})}
+
+
+
+Saves LED configuration to an INI file. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filename} & Path to the INI file. \\
+\hline
+{\em blue\+Led\+State} & Current state of the blue LED. \\
+\hline
+{\em yellow\+Led\+State} & Current state of the yellow LED. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{main_8cpp_a12e1401164f79d107d1250b4a2a51b60}\index{main.cpp@{main.cpp}!saveStatsToExistingINI@{saveStatsToExistingINI}}
+\index{saveStatsToExistingINI@{saveStatsToExistingINI}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{saveStatsToExistingINI()}{saveStatsToExistingINI()}}
+{\footnotesize\ttfamily \label{main_8cpp_a12e1401164f79d107d1250b4a2a51b60} 
+void save\+Stats\+To\+Existing\+INI (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{filename}{}\end{DoxyParamCaption})}
+
+
+
+Saves the game statistics to an existing INI file. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em filename} & Name of the INI file. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{main_8cpp_a6434e0ca239f6458c5c01bde57c156e8}\index{main.cpp@{main.cpp}!updateBoardFromSerial@{updateBoardFromSerial}}
+\index{updateBoardFromSerial@{updateBoardFromSerial}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{updateBoardFromSerial()}{updateBoardFromSerial()}}
+{\footnotesize\ttfamily \label{main_8cpp_a6434e0ca239f6458c5c01bde57c156e8} 
+void update\+Board\+From\+Serial (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{response}{}\end{DoxyParamCaption})}
+
+
+
+Updates the game board based on the response received from the Arduino. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em response} & Response received from the Arduino. \\
+\hline
+\end{DoxyParams}
+\Hypertarget{main_8cpp_a3b3f4ea946e8a7771f359d415f4df9fd}\index{main.cpp@{main.cpp}!writeSerialPort@{writeSerialPort}}
+\index{writeSerialPort@{writeSerialPort}!main.cpp@{main.cpp}}
+\doxysubsubsection{\texorpdfstring{writeSerialPort()}{writeSerialPort()}}
+{\footnotesize\ttfamily \label{main_8cpp_a3b3f4ea946e8a7771f359d415f4df9fd} 
+void write\+Serial\+Port (\begin{DoxyParamCaption}\item[{const std\+::string \&}]{data}{}\end{DoxyParamCaption})}
+
+
+
+Writes data to the serial port. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em data} & String to send to the Arduino. \\
+\hline
+\end{DoxyParams}

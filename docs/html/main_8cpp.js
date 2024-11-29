@@ -1,0 +1,27 @@
+var main_8cpp =
+[
+    [ "Stats", "struct_stats.html", "struct_stats" ],
+    [ "clearSerialBuffer", "main_8cpp.html#ab670ad8be4fe37956c781221ba347c6c", null ],
+    [ "drawBoard", "main_8cpp.html#acdaa71b00e4f0b96fca86f08da0470ab", null ],
+    [ "drawGame", "main_8cpp.html#a04c3cdb7c02251a92b9405d1f8e8f99e", null ],
+    [ "drawMarks", "main_8cpp.html#a03b7bc8fdd0bef89ac668cfaf67fd9fc", null ],
+    [ "drawSettingsMenu", "main_8cpp.html#ad7f088ce3941e55344cdab57999e116d", null ],
+    [ "loadConfig", "main_8cpp.html#ae5cbe8a8af87bdb312f468b4f3b5e22a", null ],
+    [ "loadStatsFromExistingINI", "main_8cpp.html#a23e5b90b6ad5e3934b60643ea08a2055", null ],
+    [ "main", "main_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4", null ],
+    [ "openSerialPort", "main_8cpp.html#a45ad6dc34b313dc055c596f921074d63", null ],
+    [ "openSettingsMenu", "main_8cpp.html#a5da29c7a77b794c692486bfccdd6873e", null ],
+    [ "readSerialPort", "main_8cpp.html#a76952070a776c6462d4bcb519c29fa5a", null ],
+    [ "resetBoard", "main_8cpp.html#a6728eac8015f483c7b84219300ae3ccf", null ],
+    [ "saveConfig", "main_8cpp.html#abcf397d25ec4cb6d7b9c5961046e3507", null ],
+    [ "saveStatsToExistingINI", "main_8cpp.html#a12e1401164f79d107d1250b4a2a51b60", null ],
+    [ "updateBoardFromSerial", "main_8cpp.html#a6434e0ca239f6458c5c01bde57c156e8", null ],
+    [ "writeSerialPort", "main_8cpp.html#a3b3f4ea946e8a7771f359d415f4df9fd", null ],
+    [ "board", "main_8cpp.html#ae6faf7679369708abd0fe03c143c0f13", null ],
+    [ "dcbSerialParams", "main_8cpp.html#a5e97bfd2768ed434757cd3c1eb964413", null ],
+    [ "hSerial", "main_8cpp.html#a23f559a9cd1d7e4648193a22a69a8f75", null ],
+    [ "SIZE_BOARD", "main_8cpp.html#a2b1a33eab686c2a652465c9853f67f0a", null ],
+    [ "stats", "main_8cpp.html#a5925d216740c89f43482df806fd14e8c", null ],
+    [ "TILE_SIZE", "main_8cpp.html#a8adcd57e318ecb77a2ffe6ec188f005b", null ],
+    [ "timeouts", "main_8cpp.html#ae90ed8887baa4ec8f1398952fe1cfd31", null ]
+];
