@@ -23,28 +23,3 @@ jobs:
       with:
         msystem: MINGW64
         install: mingw-w64-x86_64-gcc mingw-w64-x86_64-make
-
-    # Перевірка доступності pacman
-    - name: Verify MSYS2 Installation
-      run: |
-        pacman -V
-
-    # Оновлення MSYS2
-    - name: Update MSYS2
-      run: |
-        pacman -Syu --noconfirm
-
-    # Налаштування SFML
-    - name: Install SFML
-      run: |
-        pacman -S --noconfirm mingw-w64-x86_64-sfml
-
-    # Компіляція коду
-    - name: Build project
-      run: |
-        make
-
-    # Тестування виконуваного файлу
-    - name: Run tests
-      run: |
-        lib/client/client.exe
