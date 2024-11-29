@@ -17,29 +17,34 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # Встановлення середовища MSYS2
+    # Встановлення MSYS2
     - name: Set up MSYS2
       uses: msys2/setup-msys2@v2
       with:
         msystem: MINGW64
-        install: mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-sfml
+        install: mingw-w64-x86_64-gcc mingw-w64-x86_64-make
 
-    # Оновлення середовища
+    # Перевірка доступності pacman
+    - name: Verify MSYS2 Installation
+      run: |
+        pacman -V
+
+    # Оновлення MSYS2
     - name: Update MSYS2
       run: |
         pacman -Syu --noconfirm
 
-    # Перевірка встановлення SFML
-    - name: Verify SFML Installation
+    # Налаштування SFML
+    - name: Install SFML
       run: |
-        pacman -Qi mingw-w64-x86_64-sfml
+        pacman -S --noconfirm mingw-w64-x86_64-sfml
 
-    # Компіляція проєкту за допомогою Makefile
+    # Компіляція коду
     - name: Build project
       run: |
         make
 
-    # Тестування виконуваного файлу (за потреби)
+    # Тестування виконуваного файлу
     - name: Run tests
       run: |
         lib/client/client.exe
