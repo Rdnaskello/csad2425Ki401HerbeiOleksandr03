@@ -107,12 +107,11 @@ void processCommand() {
         saveLedStateToEEPROM(); 
         
     } 
-    // Якщо отримана команда - reset
     if (strcmp(receivedData, "reset") == 0) {
         DrawblinkLED();
         resetBoard();
         waitingForPlayerMove = false;
-        pvpmode = false; // Вихід із PvP
+        pvpmode = false; 
         playerTurn = true; 
         return;
     }
