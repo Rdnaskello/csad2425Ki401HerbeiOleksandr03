@@ -63,7 +63,7 @@ bool openSerialPort(const char* portName) {
 
 void updateBoardFromSerial(const std::string& response) {
     if (response.length() < SIZE_BOARD * SIZE_BOARD) {
-        return; // Вийти з функції, якщо недостатньо даних
+        return; 
     }
 
     int index = 0;
@@ -108,13 +108,12 @@ void saveStatsToExistingINI(const std::string& filename) {
     CSimpleIniA ini;
     ini.SetUnicode();
 
-    // Завантажуємо існуючий INI-файл
+
     if (ini.LoadFile(filename.c_str()) != SI_OK) {
         std::cout << "Failed to load INI file." << std::endl;
         return;
     }
 
-    // Зберігаємо статистику PvP
     ini.SetLongValue("Stats_PvP", "Games", stats.pvpGames);
     ini.SetLongValue("Stats_PvP", "WinsX", stats.winsX);
     ini.SetLongValue("Stats_PvP", "LossesX", stats.lossesX);
@@ -123,15 +122,12 @@ void saveStatsToExistingINI(const std::string& filename) {
     ini.SetLongValue("Stats_PvP", "LossesO", stats.lossesO);
     ini.SetLongValue("Stats_PvP", "DrawsO", stats.drawsO);
 
-    // Зберігаємо статистику для AI-гри (гравець перший)
     ini.SetLongValue("Stats ", "Games", stats.Games);
     ini.SetLongValue("Stats ", "Wins", stats.Wins);
     ini.SetLongValue("Stats ", "Draws", stats.Draws);
     ini.SetLongValue("Stats ", "Losses", stats.Losses);
     ini.SetLongValue("Stats ", "Winrate", stats.Winrate);
 
-
-    // Зберігаємо зміни в INI-файл
     if (ini.SaveFile(filename.c_str()) != SI_OK) {
         std::cout << "Failed to save INI file." << std::endl;
     }
@@ -149,13 +145,11 @@ void loadStatsFromExistingINI(const std::string& filename) {
     CSimpleIniA ini;
     ini.SetUnicode();
 
-    // Завантажуємо існуючий INI-файл
     if (ini.LoadFile(filename.c_str()) != SI_OK) {
         std::cout << "Failed to load INI file." << std::endl;
         return;
     }
 
-    // Завантажуємо статистику PvP
     stats.pvpGames = ini.GetLongValue("Stats_PvP", "Games", 0);
     stats.winsX = ini.GetLongValue("Stats_PvP", "WinsX", 0);
     stats.lossesX = ini.GetLongValue("Stats_PvP", "LossesX", 0);
@@ -164,7 +158,7 @@ void loadStatsFromExistingINI(const std::string& filename) {
     stats.lossesO = ini.GetLongValue("Stats_PvP", "LossesO", 0);
     stats.drawsO = ini.GetLongValue("Stats_PvP", "DrawsO", 0);
 
-    // Завантажуємо статистику для AI-гри (гравець перший)
+
     stats.Games = ini.GetLongValue("Stats ", "Games", 0);
     stats.Wins = ini.GetLongValue("Stats ", "Wins", 0);
     stats.Draws = ini.GetLongValue("Stats ", "Draws", 0);
@@ -190,11 +184,9 @@ void loadConfig(const std::string& filename, bool& blueLedState, bool& yellowLed
         return;
     }
 
-    // Завантажуємо стан діодів
     blueLedState = ini.GetBoolValue("LEDs", "Blue", false);
     yellowLedState = ini.GetBoolValue("LEDs", "Yellow", false);
 
-    // Лог станів
     std::cout << "Blue LED: " << (blueLedState ? "ON" : "OFF") << std::endl;
     std::cout << "Yellow LED: " << (yellowLedState ? "ON" : "OFF") << std::endl;
 }
@@ -210,20 +202,18 @@ void saveConfig(const std::string& filename, bool& blueLedState, bool& yellowLed
     CSimpleIniA ini;
     ini.SetUnicode();
     if (ini.LoadFile(filename.c_str()) != SI_OK) {
-        std::cout << "Failed to load INI file." << std::endl; // Замінено Serial.println
+        std::cout << "Failed to load INI file." << std::endl;
         return;
     }
 
-    // Записуємо стан діодів
     ini.SetBoolValue("LEDs", "Blue", blueLedState);
     ini.SetBoolValue("LEDs", "Yellow", yellowLedState);
 
-    // Зберігаємо зміни
     if (ini.SaveFile(filename.c_str()) != SI_OK) {
-        std::cout << "Failed to save INI file." << std::endl; // Замінено Serial.println
+        std::cout << "Failed to save INI file." << std::endl; 
     }
     else {
-        std::cout << "Configuration saved successfully." << std::endl; // Лог успіху
+        std::cout << "Configuration saved successfully." << std::endl; 
     }
 }
 
@@ -233,9 +223,7 @@ void saveConfig(const std::string& filename, bool& blueLedState, bool& yellowLed
 void clearSerialBuffer() {
     char buffer[256];
     DWORD bytes_read;
-    while (ReadFile(hSerial, buffer, sizeof(buffer), &bytes_read, NULL) && bytes_read > 0) {
-        // Просто зчитуємо всі дані в буфер, нічого не роблячи
-    }
+    while (ReadFile(hSerial, buffer, sizeof(buffer), &bytes_read, NULL) && bytes_read > 0) {}
 }
 
 
@@ -247,10 +235,10 @@ void writeSerialPort(const std::string& data) {
 
     DWORD bytes_written;
     if (WriteFile(hSerial, data.c_str(), data.size(), &bytes_written, NULL)) {
-        std::cout << "[Frontend] Sent to Arduino: " << data << std::endl; // Лог даних, які відправляються
+        std::cout << "[Frontend] Sent to Arduino: " << data << std::endl; 
     }
     else {
-        std::cout << "[Frontend] Error sending to Arduino!" << std::endl; // Лог помилки
+        std::cout << "[Frontend] Error sending to Arduino!" << std::endl; 
     }
 
 }
@@ -261,16 +249,16 @@ void writeSerialPort(const std::string& data) {
  */
 
 std::string readSerialPort() {
-    char buffer[256] = { 0 }; // Ініціалізуйте буфер нулями
+    char buffer[256] = { 0 };
     DWORD bytes_read;
     if (ReadFile(hSerial, buffer, sizeof(buffer) - 1, &bytes_read, NULL)) {
-        buffer[bytes_read] = '\0'; // Додайте термінальний нуль
-        std::cout << "[Backend] Received from Arduino: " << buffer << std::endl; // Лог отриманих даних
+        buffer[bytes_read] = '\0'; 
+        std::cout << "[Backend] Received from Arduino: " << buffer << std::endl; 
         return std::string(buffer);
 
     }
-    std::cout << "[Frontend] Error reading from Arduino!" << std::endl; // Лог помилки
-    return ""; // Повертаємо пустий рядок у разі невдачі
+    std::cout << "[Frontend] Error reading from Arduino!" << std::endl;
+    return ""; 
 }
 
 /**
@@ -279,15 +267,14 @@ std::string readSerialPort() {
  */
 void drawBoard(sf::RenderWindow& window) {
     for (int i = 0; i <= SIZE_BOARD; ++i) {
-        // Горизонтальні лінії
+        
         sf::RectangleShape horizontalLine(sf::Vector2f(TILE_SIZE * SIZE_BOARD, 5));
         horizontalLine.setPosition(0, i * TILE_SIZE);
         horizontalLine.setFillColor(sf::Color::Black);
         window.draw(horizontalLine);
 
-        // Вертикальні лінії
         sf::RectangleShape verticalLine(sf::Vector2f(5, TILE_SIZE * SIZE_BOARD));
-        verticalLine.setPosition(i * TILE_SIZE - 4, 0); // Додаємо поправку
+        verticalLine.setPosition(i * TILE_SIZE - 4, 0); 
         verticalLine.setFillColor(sf::Color::Black);
         window.draw(verticalLine);
     }
@@ -321,7 +308,7 @@ void drawMarks(sf::RenderWindow& window, sf::Font& font) {
 void resetBoard() {
     for (int i = 0; i < SIZE_BOARD; ++i) {
         for (int j = 0; j < SIZE_BOARD; ++j) {
-            board[i][j] = ' '; // Очищуємо дошку
+            board[i][j] = ' '; 
         }
     }
 }
@@ -343,19 +330,19 @@ void resetBoard() {
  */
 void drawGame(sf::RenderWindow& window, sf::Font& font, sf::RectangleShape playerFirstButton, sf::Text playerFirstText, sf::RectangleShape aiFirstButton, sf::Text aiFirstText, sf::RectangleShape restartButton, sf::Text restartText, sf::RectangleShape pvpButton, sf::Text pvpText, sf::RectangleShape settingsButton, sf::Text settingsText) {
 	window.clear(sf::Color::White);   
-	drawBoard(window);                // Малюємо дошку
-	drawMarks(window, font);          // Малюємо мітки (хрестики і нулики)
-    window.draw(playerFirstButton);   // Малюємо кнопку вибору черговості
-    window.draw(playerFirstText);     // Текст на кнопці "Player First"
-    window.draw(aiFirstButton);       // Малюємо кнопку вибору черговості
-    window.draw(aiFirstText);         // Текст на кнопці "AI First"
-    window.draw(restartButton);       // Малюємо кнопку рестарту
-    window.draw(restartText);         // Малюємо текст на кнопці рестарту
-    window.draw(pvpButton);           // Малюємо кнопку PvP
-    window.draw(pvpText);             // Малюємо текст на кнопці PvP
-    window.draw(settingsButton);       // Малюємо кнопку налаштувань
-    window.draw(settingsText);         // Малюємо текст на кнопці налаштувань
-    window.display();                 // Відображаємо все це у вікні
+	drawBoard(window);                
+	drawMarks(window, font);          
+    window.draw(playerFirstButton);   
+    window.draw(playerFirstText);    
+    window.draw(aiFirstButton);      
+    window.draw(aiFirstText);       
+    window.draw(restartButton);    
+    window.draw(restartText);     
+    window.draw(pvpButton);   
+    window.draw(pvpText);      
+    window.draw(settingsButton); 
+    window.draw(settingsText);
+    window.display();
 
 }
 
@@ -377,11 +364,10 @@ void drawGame(sf::RenderWindow& window, sf::Font& font, sf::RectangleShape playe
 void drawSettingsMenu(sf::RenderWindow& settingsWindow, sf::Font& font, sf::RectangleShape& blueLedButton, sf::Text& blueLedText, sf::RectangleShape& yellowLedButton, sf::Text& yellowLedText) {
     settingsWindow.clear(sf::Color::White);
 
-    // Кнопка для керування синім діодом
+   
     settingsWindow.draw(blueLedButton);
     settingsWindow.draw(blueLedText);
 
-    // Кнопка для керування жовтим діодом
     settingsWindow.draw(yellowLedButton);
     settingsWindow.draw(yellowLedText);
 
@@ -397,7 +383,6 @@ void drawSettingsMenu(sf::RenderWindow& settingsWindow, sf::Font& font, sf::Rect
 void openSettingsMenu(sf::Font& font, bool& blueLedState, bool& yellowLedState) {
     sf::RenderWindow settingsWindow(sf::VideoMode(400, 300), "Settings");
 
-    // Кнопка для керування синім діодом
     sf::RectangleShape blueLedButton(sf::Vector2f(200, 50));
     blueLedButton.setPosition(100, 50);
     blueLedButton.setFillColor(sf::Color::Blue);
@@ -407,7 +392,6 @@ void openSettingsMenu(sf::Font& font, bool& blueLedState, bool& yellowLedState) 
     blueLedText.setCharacterSize(20);
     blueLedText.setFillColor(sf::Color::White);
 
-    // Кнопка для керування жовтим діодом
     sf::RectangleShape yellowLedButton(sf::Vector2f(200, 50));
     yellowLedButton.setPosition(100, 150);
     yellowLedButton.setFillColor(sf::Color::Yellow);
@@ -429,19 +413,18 @@ void openSettingsMenu(sf::Font& font, bool& blueLedState, bool& yellowLedState) 
                 int mouseY = event.mouseButton.y;
 
                 if (blueLedButton.getGlobalBounds().contains(mouseX, mouseY)) {
-                    blueLedState = !blueLedState; // Змінюємо стан
+                    blueLedState = !blueLedState; 
                     saveConfig("D:/scad/csad2425Ki401HerbeiOleksandr03/config/config.ini", blueLedState, yellowLedState);
                     writeSerialPort("BLed\n");
                 }
                 else if (yellowLedButton.getGlobalBounds().contains(mouseX, mouseY)) {
-                    yellowLedState = !yellowLedState; // Змінюємо стан
+                    yellowLedState = !yellowLedState; 
                     saveConfig("D:/scad/csad2425Ki401HerbeiOleksandr03/config/config.ini", blueLedState, yellowLedState);
                     writeSerialPort("Yled\n");
                 }
             }
         }
 
-        // Оновлюємо текст кнопок залежно від стану діодів
         blueLedText.setString(blueLedState ? "Blue LED: ON" : "Blue LED: OFF");
         blueLedText.setPosition(blueLedButton.getPosition().x + 20, blueLedButton.getPosition().y + 10);
 
@@ -474,11 +457,11 @@ int main() {
     bool yellowLedState;
 
     bool gameOver = false;
-    bool resetRequested = false; // Додаємо змінну для фіксації запиту на скидання
+    bool resetRequested = false; 
     loadConfig("D:/scad/csad2425Ki401HerbeiOleksandr03/config/config.ini", blueLedState, yellowLedState);
     loadStatsFromExistingINI("D:/scad/csad2425Ki401HerbeiOleksandr03/config/config.ini");
-    // Створення кнопок для вибору черговості
-    sf::RectangleShape playerFirstButton(sf::Vector2f(150, 50)); // Кнопка вибору черговості гравця
+
+    sf::RectangleShape playerFirstButton(sf::Vector2f(150, 50));
     playerFirstButton.setPosition((TILE_SIZE * SIZE_BOARD - 300) / 2, TILE_SIZE * SIZE_BOARD + 20);
     playerFirstButton.setFillColor(sf::Color::Blue);
     sf::Text playerFirstText;
@@ -488,7 +471,7 @@ int main() {
     playerFirstText.setFillColor(sf::Color::White);
     playerFirstText.setPosition(playerFirstButton.getPosition().x + 10, playerFirstButton.getPosition().y + 10);
 
-    sf::RectangleShape aiFirstButton(sf::Vector2f(150, 50)); // Кнопка вибору черговості AI
+    sf::RectangleShape aiFirstButton(sf::Vector2f(150, 50)); 
     aiFirstButton.setPosition((TILE_SIZE * SIZE_BOARD + 50) / 2, TILE_SIZE * SIZE_BOARD + 20);
     aiFirstButton.setFillColor(sf::Color::Red);
     sf::Text aiFirstText;
@@ -498,8 +481,8 @@ int main() {
     aiFirstText.setFillColor(sf::Color::White);
     aiFirstText.setPosition(aiFirstButton.getPosition().x + 10, aiFirstButton.getPosition().y + 10);
 
-    sf::RectangleShape restartButton(sf::Vector2f(150, 50)); // Кнопка перезавантаження
-    restartButton.setPosition(aiFirstButton.getPosition().x, aiFirstButton.getPosition().y + 60); // Позиція праворуч під AI
+    sf::RectangleShape restartButton(sf::Vector2f(150, 50));
+    restartButton.setPosition(aiFirstButton.getPosition().x, aiFirstButton.getPosition().y + 60); 
     restartButton.setFillColor(sf::Color::Green);
     sf::Text restartText;
     restartText.setFont(font);
@@ -508,8 +491,8 @@ int main() {
     restartText.setFillColor(sf::Color::White);
     restartText.setPosition(restartButton.getPosition().x + 10, restartButton.getPosition().y + 10);
 
-    sf::RectangleShape pvpButton(sf::Vector2f(150, 50)); // Кнопка PvP
-    pvpButton.setPosition(playerFirstButton.getPosition().x, playerFirstButton.getPosition().y + 60); // Позиція під Player First
+    sf::RectangleShape pvpButton(sf::Vector2f(150, 50)); 
+    pvpButton.setPosition(playerFirstButton.getPosition().x, playerFirstButton.getPosition().y + 60); 
     pvpButton.setFillColor(sf::Color::Yellow);
     sf::Text pvpText;
     pvpText.setFont(font);
@@ -518,9 +501,8 @@ int main() {
     pvpText.setFillColor(sf::Color::Black);
     pvpText.setPosition(pvpButton.getPosition().x + 10, pvpButton.getPosition().y + 10);
 
-    // кнопка для налаштування
-    sf::RectangleShape settingsButton(sf::Vector2f(150, 50)); // Кнопка налаштувань
-    settingsButton.setPosition(pvpButton.getPosition().x, pvpButton.getPosition().y + 60); // Позиція під PvP
+    sf::RectangleShape settingsButton(sf::Vector2f(150, 50));
+    settingsButton.setPosition(pvpButton.getPosition().x, pvpButton.getPosition().y + 60); 
     settingsButton.setFillColor(sf::Color::Magenta);
     sf::Text settingsText;
     settingsText.setFont(font);
@@ -548,27 +530,27 @@ int main() {
 
                 if (restartButton.getGlobalBounds().contains(mouseX, mouseY)) {
                     writeSerialPort("reset\n");
-                    resetRequested = true; // Запит на скидання без очищення дошки
+                    resetRequested = true; 
                 }
                 else if (playerFirstButton.getGlobalBounds().contains(mouseX, mouseY)) {
                     writeSerialPort("player\n");
-                    resetBoard(); // Очистити дошку
-                    resetRequested = true; // Запит на скидання з очищенням дошки
+                    resetBoard(); 
+                    resetRequested = true; 
                 }
                 else if (aiFirstButton.getGlobalBounds().contains(mouseX, mouseY)) {
                     writeSerialPort("ai\n");
-                    resetBoard(); // Очистити дошку
-                    resetRequested = true; // Запит на скидання з очищенням дошки
+                    resetBoard(); 
+                    resetRequested = true; 
                 }
                 else if (settingsButton.getGlobalBounds().contains(mouseX, mouseY)) {
                     openSettingsMenu(font, yellowLedState, blueLedState);
                 }
                 else if (pvpButton.getGlobalBounds().contains(mouseX, mouseY)) {
                     writeSerialPort("pvp\n");
-                    resetBoard(); // Очистити дошку
-                    resetRequested = true; // Запит на скидання з очищенням дошки
+                    resetBoard(); 
+                    resetRequested = true; 
                 }
-                else if (!gameOver && !resetRequested) { // Не обробляємо хід, якщо очікуємо на скидання
+                else if (!gameOver && !resetRequested) { 
                     int row = mouseY / TILE_SIZE;
                     int col = mouseX / TILE_SIZE;
 
@@ -576,11 +558,9 @@ int main() {
                         std::string move = std::to_string(row) + "," + std::to_string(col) + "\n";
                         writeSerialPort(move);
                         
-                        // Дочекайтеся відповіді від Arduino
                         std::string response = readSerialPort();
                         updateBoardFromSerial(response);
 
-                        // Обробка результату гри
                         if (response.find("X win!") != std::string::npos) {
                             stats.winsX++;
                             stats.lossesO++;
@@ -613,32 +593,28 @@ int main() {
                             stats.Games++;
                             gameOver = true;
                         }
-
-                        // Зберігаємо статистику після завершення гри
                         if (gameOver) {
                             saveStatsToExistingINI("D:/scad/csad2425Ki401HerbeiOleksandr03/config/config.ini");
                         }
 
-                        // Оновити відображення дошки після кожного ходу
                         drawGame(window, font, playerFirstButton, playerFirstText, aiFirstButton, aiFirstText, restartButton, restartText, pvpButton, pvpText, settingsButton, settingsText);
                     }
                 }
             }
         }
 
-        // Перевірка на відповідь від Arduino після запиту скидання
         if (resetRequested) {
             std::string response = readSerialPort();
             if (!response.empty()) {
                 updateBoardFromSerial(response);
-                resetRequested = false; // Завершили скидання
-                gameOver = false;       // Гра триває
+                resetRequested = false; 
+                gameOver = false;   
                 drawGame(window, font, playerFirstButton, playerFirstText, aiFirstButton, aiFirstText, restartButton, restartText, pvpButton, pvpText, settingsButton, settingsText);
             }
         }
     }
 
 
-    CloseHandle(hSerial); // Закрити серійний порт після виходу
+    CloseHandle(hSerial); 
     return 0;
 }

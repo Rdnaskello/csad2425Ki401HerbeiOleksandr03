@@ -3,7 +3,8 @@
  * @brief Arduino backend for Tic-Tac-Toe game with AI and LED indicators.
  */
 #include <Arduino.h>
-#include <EEPROM.h> // Для збереження стану діодів між перезавантаженнями
+#include <EEPROM.h> 
+#include <AUnit.h>
 
 /**
  * @struct Pair
@@ -21,7 +22,7 @@ const int BlueledPin = 8;
 const int YellowledPin = 9;
 
 /// Buffer for incoming serial data.
-char receivedData[10];
+char receivedData[20];
 
 /// Index for the serial data buffer.
 int dataIndex = 0;
@@ -47,12 +48,12 @@ bool yellowLedState = false; ///< State of the yellow LED.
  * Initializes the serial communication, pins, and loads LED states.
  */
 void setup(){
-    Serial.begin(4800);
+    Serial.begin(9600);
     pinMode(BlueledPin, OUTPUT);
     pinMode(YellowledPin, OUTPUT);
-    loadLedStateFromEEPROM(); // Завантаження стану діодів
+    loadLedStateFromEEPROM(); 
     while (Serial.available() > 0) {
-        Serial.read(); // Чистимо серійний буфер
+        Serial.read(); 
     }
     resetBoard(); 
 }
@@ -63,17 +64,20 @@ void setup(){
  * Handles serial input and game logic.
  */
 void loop() {
-    // Читання серійної команди
+    aunit::TestRunner::setVerbosity(aunit::Verbosity::kAll);
+    Serial.println("Starting AUnit tests...");
+    aunit::TestRunner::run();
+    
     if (Serial.available() > 0) {
         char receivedChar = Serial.read();
         if (receivedChar == '\n') {
-            receivedData[dataIndex] = '\0'; // Завершуємо рядок
-            processCommand(); // Обробка команди
-            dataIndex = 0;    // Скидання індексу після обробки
+            receivedData[dataIndex] = '\0';
+            processCommand(); 
+            dataIndex = 0;    
         } else if (dataIndex < sizeof(receivedData) - 1) {
             receivedData[dataIndex++] = receivedChar;
         } else {
-            dataIndex = 0; // Скидання буфера при переповненні
+            dataIndex = 0; 
             memset(receivedData, 0, sizeof(receivedData));
         }
     }
@@ -87,24 +91,20 @@ void loop() {
 void processCommand() {
     if (strlen(receivedData) > 9) {
         Serial.println("Error: Command too long!");
-        memset(receivedData, 0, sizeof(receivedData)); // Очищення буфера
+        memset(receivedData, 0, sizeof(receivedData)); 
         return;
-    }
-
-    if (strcmp(receivedData, "My move:") == 0) {
-        Serial.println("Nice but");
     }
 
     if (strcmp(receivedData, "BLed") == 0) {
         BlueblinkLED();
-        blueLedState = !blueLedState; // Змінюємо стан синього діода
-        saveLedStateToEEPROM(); // Зберігаємо стан у EEPROM
+        blueLedState = !blueLedState; 
+        saveLedStateToEEPROM(); 
         
     } 
     if (strcmp(receivedData, "Yled") == 0) {
         YellowblinkLED();
-        yellowLedState = !yellowLedState; // Змінюємо стан жовтого діода
-        saveLedStateToEEPROM(); // Зберігаємо стан у EEPROM
+        yellowLedState = !yellowLedState; 
+        saveLedStateToEEPROM(); 
         
     } 
     // Якщо отримана команда - reset
@@ -113,36 +113,32 @@ void processCommand() {
         resetBoard();
         waitingForPlayerMove = false;
         pvpmode = false; // Вихід із PvP
-        playerTurn = true; // Починаємо з першого гравця
+        playerTurn = true; 
         return;
     }
 
-    // Якщо гра ще не завершена
     if (!gameOver) {
-        // Обробка режимів гри
         if (strcmp(receivedData, "player") == 0) {
             sendCurrentBoardState();
-            waitingForPlayerMove = true; // Очікуємо хід гравця
-            pvpmode = false; // Вимикаємо PvP
+            waitingForPlayerMove = true; 
+            pvpmode = false;
             memset(receivedData, 0, sizeof(receivedData));
             return;
         } else if (strcmp(receivedData, "ai") == 0) {
             makeAIMove();
             sendCurrentBoardState();
-            waitingForPlayerMove = true; // Після ходу AI чекаємо на хід гравця
+            waitingForPlayerMove = true;
             pvpmode = false;
             memset(receivedData, 0, sizeof(receivedData));
             return;
         } else if (strcmp(receivedData, "pvp") == 0) {
             pvpmode = true;
-            waitingForPlayerMove = false; // Вимикаємо інші режими
-            playerTurn = true; // Перший гравець X
+            waitingForPlayerMove = false; 
+            playerTurn = true;
             sendCurrentBoardState();
             memset(receivedData, 0, sizeof(receivedData));
             return;
         }
-
-        // Обробка ходу (один метод для всіх режимів)
         if (receivedData[1] == ',' && receivedData[0] >= '0' &&
             receivedData[0] <= '2' && receivedData[2] >= '0' &&
             receivedData[2] <= '2') {
@@ -150,44 +146,39 @@ void processCommand() {
             int row = receivedData[0] - '0';
             int col = receivedData[2] - '0';
 
-            if (board[row][col] == ' ') { // Якщо клітинка порожня
-                // У PvP змінюємо черговість гравців
+            if (board[row][col] == ' ') { 
                 if (pvpmode) {
                     board[row][col] = playerTurn ? 'X' : 'O';
-                    playerTurn = !playerTurn; // Змінюємо гравця
+                    playerTurn = !playerTurn; 
                 } else {
-                    board[row][col] = 'X'; // Хід гравця X
-                    makeAIMove(); // Хід AI
+                    board[row][col] = 'X'; 
+                    makeAIMove();
                     
                 }
                 moveCount++;
                 sendCurrentBoardState();
-
-                // Перевірка результату гри
                 if (checkWinner()) {
                     gameOver = true;
                     if (pvpmode) {
-                        // PvP режим
                         if (playerTurn) {
-                            YellowblinkLED(); // Жовтий діод для гравця O
+                            YellowblinkLED(); 
                             Serial.println("O win!");
                         } else {
-                            BlueblinkLED(); // Синій діод для гравця X
+                            BlueblinkLED(); 
                             Serial.println("X win!");
                         }
                     } else {
-                        // AI режим
                         if (isAIMoveWinning()) { 
-                            YellowblinkLED(); // Жовтий діод для AI
+                            YellowblinkLED();
                             Serial.println("AI win!");
                         } else {
-                            BlueblinkLED(); // Синій діод для гравця
+                            BlueblinkLED(); 
                             Serial.println("You win!");
                         }
                     }
                 } else if (moveCount >= 9) {
                     gameOver = true;
-                    DrawblinkLED(); // Обидва діоди блимають
+                    DrawblinkLED(); 
                     Serial.println("Draw!");
                 }
             }
@@ -218,7 +209,6 @@ void loadLedStateFromEEPROM() {
     int blueState = EEPROM.read(0);
     int yellowState = EEPROM.read(1);
 
-    // Перевірка, чи значення є допустимим
     blueLedState = (blueState == 1);
     yellowLedState = (yellowState == 1);
 
@@ -231,7 +221,7 @@ void loadLedStateFromEEPROM() {
  * @return True if the AI's move is a winning move, false otherwise.
  */
 bool isAIMoveWinning() {
-    return evaluate(board) == 1; // 1 означає виграш AI
+    return evaluate(board) == 1; 
 }
 
 /**
@@ -240,9 +230,9 @@ bool isAIMoveWinning() {
  * @return The best move as a Pair (row, column).
  */
 Pair makeAIMove() {
-    Pair bestMove = findBestMove(board); // Знаходимо найкращий хід
-    board[bestMove.first][bestMove.second] = 'O'; // AI робить хід за O
-    moveCount++; // Збільшуємо лічильник ходів
+    Pair bestMove = findBestMove(board); 
+    board[bestMove.first][bestMove.second] = 'O';
+    moveCount++; 
     return bestMove;
 }
 
@@ -260,7 +250,7 @@ void resetBoard() {
     waitingForPlayerMove = false;
     pvpmode = false;
     playerTurn = true;
-    isPlayerOneTurn = true; // Додано
+    isPlayerOneTurn = true; 
     memset(receivedData, 0, sizeof(receivedData));
     sendCurrentBoardState();
 }
@@ -271,10 +261,10 @@ void resetBoard() {
 void sendCurrentBoardState() {
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
-            Serial.print(board[i][j]); // Відправка символу
+            Serial.print(board[i][j]); 
         }
     }
-    Serial.println(); // Перехід на новий рядок
+    Serial.println(); 
 }
 
 /**
@@ -282,12 +272,10 @@ void sendCurrentBoardState() {
  * @return True if there is a winner, false otherwise.
  */
 bool checkWinner() {
-    // Перевірка горизонтальних та вертикальних ліній
     for (int i = 0; i < 3; i++) {
         if (board[i][0] == board[i][1] && board[i][1] == board[i][2] && board[i][0] != ' ') return true;
         if (board[0][i] == board[1][i] && board[1][i] == board[2][i] && board[0][i] != ' ') return true;
     }
-    // Перевірка діагоналей
     if (board[0][0] == board[1][1] && board[1][1] == board[2][2] && board[0][0] != ' ') return true;
     if (board[0][2] == board[1][1] && board[1][1] == board[2][0] && board[0][2] != ' ') return true;
     return false;
@@ -297,7 +285,7 @@ bool checkWinner() {
  * @brief Blinks the blue LED.
  */
 void BlueblinkLED() {
-    if (blueLedState) { // Виконуємо тільки якщо діод увімкнений у налаштуваннях
+    if (blueLedState) { 
         digitalWrite(BlueledPin, HIGH);
         delay(300);
         digitalWrite(BlueledPin, LOW);
@@ -308,7 +296,7 @@ void BlueblinkLED() {
  * @brief Blinks the yellow LED.
  */
 void YellowblinkLED() {
-    if (yellowLedState) { // Виконуємо тільки якщо діод увімкнений у налаштуваннях
+    if (yellowLedState) { 
         digitalWrite(YellowledPin, HIGH);
         delay(300);
         digitalWrite(YellowledPin, LOW);
@@ -344,20 +332,18 @@ void DrawblinkLED() {
  * @return 1 if AI wins, -1 if player wins, 0 otherwise.
  */
 int evaluate(char board[3][3]) {
-    // Перевірка рядків і стовпців
     for (int i = 0; i < 3; i++) {
         if (board[i][0] != ' ' && board[i][0] == board[i][1] && board[i][1] == board[i][2])
             return (board[i][0] == ai) ? 1 : -1;
         if (board[0][i] != ' ' && board[0][i] == board[1][i] && board[1][i] == board[2][i])
             return (board[0][i] == ai) ? 1 : -1;
     }
-    // Перевірка діагоналей
     if (board[0][0] != ' ' && board[0][0] == board[1][1] && board[1][1] == board[2][2])
         return (board[0][0] == ai) ? 1 : -1;
     if (board[0][2] != ' ' && board[0][2] == board[1][1] && board[1][1] == board[2][0])
         return (board[0][2] == ai) ? 1 : -1;
 
-    return 0; // Нічия
+    return 0; 
 }
 
 /**
@@ -405,22 +391,22 @@ bool canCreateFork(char board[3][3], char playerSymbol) {
  * @return The evaluated score of the board.
  */
 int minimax(char board[3][3], int depth, bool isMaximizing, int alpha, int beta) {
-    if (depth > 9) return 0; // Ліміт на глибину
+    if (depth > 9) return 0; 
     int score = evaluate(board);
 
-    if (score == 1 || score == -1) return score; // Якщо є перемога
-    if (!isMovesLeft(board)) return 0; // Якщо нічия
+    if (score == 1 || score == -1) return score; 
+    if (!isMovesLeft(board)) return 0; 
 
     if (isMaximizing) {
         int best = -1000;
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 if (board[i][j] == ' ') {
-                    board[i][j] = ai; // Пробуємо хід AI
+                    board[i][j] = ai; 
                     best = max(best, minimax(board, depth + 1, false, alpha, beta));
-                    board[i][j] = ' '; // Відміняємо хід
+                    board[i][j] = ' '; 
                     alpha = max(alpha, best);
-                    if (beta <= alpha) break; // Обрізання
+                    if (beta <= alpha) break; 
                 }
             }
         }
@@ -430,11 +416,11 @@ int minimax(char board[3][3], int depth, bool isMaximizing, int alpha, int beta)
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 if (board[i][j] == ' ') {
-                    board[i][j] = player; // Пробуємо хід гравця
+                    board[i][j] = player; 
                     best = min(best, minimax(board, depth + 1, true, alpha, beta));
-                    board[i][j] = ' '; // Відміняємо хід
+                    board[i][j] = ' '; 
                     beta = min(beta, best);
-                    if (beta <= alpha) break; // Обрізання
+                    if (beta <= alpha) break; 
                 }
             }
         }
@@ -451,34 +437,29 @@ Pair findBestMove(char board[3][3]) {
     Pair bestMove = {-1, -1};
     int bestVal = -1000;
     int positionPriority[3][3] = {
-        {3, 2, 3}, // Пріоритетність позицій
+        {3, 2, 3},
         {2, 4, 2},
         {3, 2, 3}
     };
     Pair winningMove = findWinningMove(board, ai);
     if (winningMove.first != -1) {
-        return winningMove; // Виконуємо виграшний хід
+        return winningMove; 
     }
-    // Спершу перевіряємо, чи є хід, який блокує перемогу гравця
     Pair blockingMove = findBlockingMove(board, player);
     if (blockingMove.first != -1) {
-        return blockingMove; // Повертаємо блокувальний хід
+        return blockingMove;
     }
     Pair forkMove = findForkMove(board, ai);
     if (forkMove.first != -1) {
-        return forkMove; // Повертаємо хід, який створює форк
+        return forkMove;
     }
-    
 
-    // MiniMax для визначення найкращого ходу
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
-            if (board[i][j] == ' ') { // Якщо клітинка порожня
-                board[i][j] = ai; // Пробуємо хід AI
+            if (board[i][j] == ' ') { 
+                board[i][j] = ai; 
                 int moveVal = minimax(board, 0, false, -1000, 1000);
-                board[i][j] = ' '; // Відміняємо хід
-
-                // Додаємо оцінку пріоритету позиції
+                board[i][j] = ' '; 
                 moveVal += positionPriority[i][j];
 
                 if (moveVal > bestVal) {
@@ -500,17 +481,17 @@ Pair findBestMove(char board[3][3]) {
 Pair findWinningMove(char board[3][3], char playerSymbol) {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
-            if (board[i][j] == ' ') { // Якщо клітинка порожня
-                board[i][j] = playerSymbol; // Симулюємо хід
-                if (evaluate(board) == 1) { // Перевіряємо, чи це виграш
-                    board[i][j] = ' '; // Скидаємо хід
-                    return {i, j}; // Повертаємо виграшний хід
+            if (board[i][j] == ' ') { 
+                board[i][j] = playerSymbol; 
+                if (evaluate(board) == 1) { 
+                    board[i][j] = ' '; 
+                    return {i, j};
                 }
-                board[i][j] = ' '; // Скидаємо хід
+                board[i][j] = ' '; 
             }
         }
     }
-    return {-1, -1}; // Немає виграшних ходів
+    return {-1, -1}; 
 }
 
 /**
@@ -522,17 +503,17 @@ Pair findWinningMove(char board[3][3], char playerSymbol) {
 Pair findBlockingMove(char board[3][3], char opponent) {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
-            if (board[i][j] == ' ') { // Якщо клітинка порожня
-                board[i][j] = opponent; // Симулюємо хід опонента
-                if (evaluate(board) == -1) { // Якщо це виграшний хід
-                    board[i][j] = ' '; // Відміняємо хід
-                    return {i, j}; // Повертаємо блокувальний хід
+            if (board[i][j] == ' ') {
+                board[i][j] = opponent; 
+                if (evaluate(board) == -1) { 
+                    board[i][j] = ' '; 
+                    return {i, j}; 
                 }
-                board[i][j] = ' '; // Відміняємо хід
+                board[i][j] = ' ';
             }
         }
     }
-    return {-1, -1}; // Немає загроз
+    return {-1, -1};
 }
 
 /**
@@ -544,15 +525,15 @@ Pair findBlockingMove(char board[3][3], char opponent) {
 Pair findForkMove(char board[3][3], char playerSymbol) {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
-            if (board[i][j] == ' ') { // Якщо клітинка порожня
-                board[i][j] = playerSymbol; // Симулюємо хід
+            if (board[i][j] == ' ') { 
+                board[i][j] = playerSymbol; 
                 if (canCreateFork(board, playerSymbol)) {
-                    board[i][j] = ' '; // Скидаємо хід
-                    return {i, j}; // Повертаємо хід, який створює форк
+                    board[i][j] = ' '; 
+                    return {i, j}; 
                 }
-                board[i][j] = ' '; // Скидаємо хід
+                board[i][j] = ' '; 
             }
         }
     }
-    return {-1, -1}; // Форк неможливий
+    return {-1, -1};
 }
